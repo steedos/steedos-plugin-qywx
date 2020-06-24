@@ -1,0 +1,39 @@
+datasources:
+  default:
+    connection:
+      url: ${MONGO_URL}
+    objectFiles: 
+      - "./src/**"
+public:
+  cfs:
+    store: "local"
+    local: 
+      folder: "./storage"
+email:
+  from: 华炎云 <noreply@steedos.com>
+  url: xxx
+qywx:
+  sync_interval: 60000
+  authorize_uri: https://open.weixin.qq.com/connect/oauth2/authorize
+  api:
+    getLoginInfo: https://qyapi.weixin.qq.com/cgi-bin/service/get_login_info
+    getProviderToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_provider_token
+    getSuiteAccessToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token
+    getPreAuthCode: https://qyapi.weixin.qq.com/cgi-bin/service/get_pre_auth_code
+    getPermanentCode: https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code
+    getCorpToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_corp_token
+    getDepartmentList: https://qyapi.weixin.qq.com/cgi-bin/department/list
+    getUserList: https://qyapi.weixin.qq.com/cgi-bin/user/list
+    getAllUserList: https://qyapi.weixin.qq.com/cgi-bin/user/list
+    getAdminList: https://qyapi.weixin.qq.com/cgi-bin/service/get_admin_list
+    getUserInfo3rd: https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd
+tenant:
+  name: 华炎魔方
+  enable_register: true
+  enable_forget_password: true
+  enable_create_tenant: true
+  enable_password_login: true
+  enable_bind_email: false
+  enable_bind_mobile: false
+plugins:
+  - "@steedos/accounts"

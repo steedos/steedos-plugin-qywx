@@ -1,0 +1,45 @@
+{
+    "name": "app",
+    "version": "0.0.1",
+    "description": "",
+    "main": "lib/index.js",
+    "scripts": {
+        "debug": "tsc && nodemon server.js",
+        "start": "node server",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@salesforce/dev-config": "^1.4.4",
+        "@steedos/accounts": "^1.19.8",
+        "@steedos/steedos-plugin-workflow": "^2.0.8",
+        "ts-node": "^8.4.1",
+        "admin-lte": "^2.3.11",
+        "babel-runtime": "^6.23.0",
+        "bcrypt": "3.0.6",
+        "bootstrap": "^3.3.7",
+        "cookies": "^0.8.0",
+        "dotenv-flow": "^3.1.0",
+        "express": "^4.17.1",
+        "steedos-server": "^1.20.13",
+        "wechat-crypto": "^0.0.2",
+        "xml2json": "^0.12.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.19.1"
+    },
+    "homepage": "https://developer.steedos.com",
+    "resolutions": {
+        "**/lodash": "^4.17.15",
+        "**/handlebars": "^4.3.0",
+        "**/debug": "^3.1.0",
+        "**/hoek": "^5.0.3",
+        "**/cryptiles": "^4.1.2",
+        "**/bcrypt": "3.0.6",
+        "**/samlp": "3.4.1",
+        "**/xmldom": "0.2.1",
+        "**/tslib": "1.11.2",
+        "**/fibers": "^4.0.3"
+    }
+}
