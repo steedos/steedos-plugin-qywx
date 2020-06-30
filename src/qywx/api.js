@@ -1,19 +1,31 @@
 let newCrypt, _ref, _ref2, _ref3, _ref4;
-let Cookies = require("cookies");
+const Cookies = require("cookies");
 let express = require('express');
-let Qiyeweixin = require('./qywx');
 let router = express.Router();
 let parser = require('xml2json');
+let qiyeweixin = require('./qywx');
+let _sync = require('./sync');
 let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
 const steedosConfig = objectql.getSteedosConfig();
 let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
 });
+ServiceConfiguration.configurations.update(config._id, {
+    $set: {
+        "suite_id": "wwdf2bbe3817d8a40a",
+        "suite_secret": "sfPGwVbVzht-_dLvf85gzHua2YGp0HVD3NkeSsDafKw"
+    },
+    $currentDate: {
+        "modified": true
+    }
+});
 if (config) {
     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
 }
 let TICKET_EXPIRES_IN = (config != null ? (_ref4 = config.secret) != null ? _ref4.ticket_expires_in : void 0 : void 0) || 1000 * 60 * 20;
+
+
 
 // 
 router.use("/qywx", async function (req, res, next) {
@@ -32,7 +44,6 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
         authorize_uri = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.authorize_uri : void 0 : void 0;
         appid = o != null ? (_ref7 = o.secret) != null ? _ref7.corpid : void 0 : void 0;
         url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + '&response_type=code&scope=snsapi_base#wechat_redirect';
-        console.log("url-------: ",url);
         res.writeHead(302, {
             'Location': url
         });
@@ -48,8 +59,9 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     authToken = cookies.get("X-Auth-Token");
     console.log("userId: ",userId);
     console.log("authToken: ",authToken);
+    console.log("req.query.code: ",req.query.code);
     if (req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) {
-        userInfo = Qiyeweixin.getUserInfo3rd(req.query.code);
+        userInfo = qiyeweixin.getUserInfo3rd(req.query.code);
     } else {
         res.writeHead(200, {
             'Content-Type': 'text/html'
@@ -73,7 +85,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     }
     if (userId && authToken) {
         if (user._id !== userId) {
-            Setup.clearAuthCookies(req, res);
+            qiyeweixin.clearAuthCookies(req, res);
             hashedToken = Accounts._hashLoginToken(authToken);
             Accounts.destroyToken(userId, hashedToken);
         } else {
@@ -86,7 +98,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     authToken = Accounts._generateStampedLoginToken();
     hashedToken = Accounts._hashStampedToken(authToken);
     Accounts._insertHashedLoginToken(user._id, hashedToken);
-    Setup.setAuthCookies(req, res, user._id, authToken.token);
+    qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
     res.writeHead(302, {
         'Location': '/'
     });
@@ -94,114 +106,124 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
 });
 
 // 从企业微信端单点登录:从浏览器后台管理页面"前往服务商后台"进入的网址
-// router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
-//     let at, authToken, hashedToken, loginInfo, o, user, _ref5, _ref6, _ref7;
-//     o = ServiceConfiguration.configurations.findOne({
-//         service: "qiyeweixin"
-//     });
-//     at = Qiyeweixin.getProviderToken(o != null ? (_ref5 = o.secret) != null ? _ref5.corpid : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.provider_secret : void 0 : void 0);
-//     if (at && at.provider_access_token) {
-//         loginInfo = Qiyeweixin.getLoginInfo(at.provider_access_token, req.query.auth_code);
-//         if (loginInfo != null ? (_ref7 = loginInfo.user_info) != null ? _ref7.userid : void 0 : void 0) {
-//             user = db.users.findOne({
-//                 'services.qiyeweixin.id': loginInfo.user_info.userid
-//             });
-//             if (user) {
-//                 authToken = Accounts._generateStampedLoginToken();
-//                 hashedToken = Accounts._hashStampedToken(authToken);
-//                 Accounts._insertHashedLoginToken(user._id, hashedToken);
-//                 Setup.setAuthCookies(req, res, user._id, authToken.token);
-//                 res.writeHead(302, {
-//                     'Location': '/'
-//                 });
-//                 return res.end('success');
-//             } else {
-//                 res.writeHead(200, {
-//                     'Content-Type': 'text/html'
-//                 });
-//                 res.write('<head><meta charset="utf-8"/></head>');
-//                 res.write('<h1>提示 Tips</h1>');
-//                 res.write('<h2>正在同步企业微信用户数据...</h2>');
-//                 return res.end('');
-//             }
-//         } else {
-//             res.writeHead(200, {
-//                 'Content-Type': 'text/html'
-//             });
-//             res.write('<head><meta charset="utf-8"/></head>');
-//             res.write('<h1>提示 Tips</h1>');
-//             res.write('<h2>未从企业微信获取到用户信息！</h2>');
-//             return res.end('');
-//         }
-//     } else {
-//         res.writeHead(200, {
-//             'Content-Type': 'text/html'
-//         });
-//         res.write('<head><meta charset="utf-8"/></head>');
-//         res.write('<h1>提示 Tips</h1>');
-//         res.write('<h2>未从企业微信获取到服务商的Token</h2>');
-//         return res.end('');
-//     }
-// });
+router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
+    let at, authToken, hashedToken, loginInfo, o, user, _ref5, _ref6, _ref7;
+    o = ServiceConfiguration.configurations.findOne({
+        service: "qiyeweixin"
+    });
+    at = qiyeweixin.getProviderToken(o != null ? (_ref5 = o.secret) != null ? _ref5.corpid : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.provider_secret : void 0 : void 0);
+    if (at && at.provider_access_token) {
+        loginInfo = qiyeweixin.getLoginInfo(at.provider_access_token, req.query.auth_code);
+        if (loginInfo != null ? (_ref7 = loginInfo.user_info) != null ? _ref7.userid : void 0 : void 0) {
+            console.log("loginInfo.user_info.userid: ",loginInfo.user_info.userid);
+            user = db.users.findOne({
+                'services.qiyeweixin.id': loginInfo.user_info.userid
+            });
+            if (user) {
+                authToken = Accounts._generateStampedLoginToken();
+                hashedToken = Accounts._hashStampedToken(authToken);
+                Accounts._insertHashedLoginToken(user._id, hashedToken);
+                qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
+                res.writeHead(302, {
+                    'Location': '/'
+                });
+                return res.end('success');
+            } else {
+                res.writeHead(200, {
+                    'Content-Type': 'text/html'
+                });
+                res.write('<head><meta charset="utf-8"/></head>');
+                res.write('<h1>提示 Tips</h1>');
+                res.write('<h2>正在同步企业微信用户数据...</h2>');
+                return res.end('');
+            }
+        } else {
+            res.writeHead(200, {
+                'Content-Type': 'text/html'
+            });
+            res.write('<head><meta charset="utf-8"/></head>');
+            res.write('<h1>提示 Tips</h1>');
+            res.write('<h2>未从企业微信获取到用户信息！</h2>');
+            return res.end('');
+        }
+    } else {
+        res.writeHead(200, {
+            'Content-Type': 'text/html'
+        });
+        res.write('<head><meta charset="utf-8"/></head>');
+        res.write('<h1>提示 Tips</h1>');
+        res.write('<h2>未从企业微信获取到服务商的Token</h2>');
+        return res.end('');
+    }
+});
 
-// // 创建套件使用，验证第三方回调协议可用性
-// router.get("/api/qiyeweixin/callback", async function (req, res, next) {
-//     let result;
-//     result = newCrypt.decrypt(req.query.echostr);
-//     res.writeHead(200, {
-//         "Content-Type": "text/plain"
-//     });
-//     return res.end(result.message);
-// });
+// 创建套件使用，验证第三方回调协议可用性
+router.get("/api/qiyeweixin/callback", async function (req, res, next) {
+    let result = newCrypt.decrypt(req.query.echostr);
+    res.writeHead(200, {
+        "Content-Type": "text/plain"
+    });
+    return res.end(result.message);
+});
 
-// // 第三方回调协议
-// router.post("/api/qiyeweixin/callback", async function (req, res, next) {
-//     let msg_signature, nonce, postData, timestamp;
-//     postData = '';
-//     msg_signature = req.query.msg_signature;
-//     timestamp = req.query.timestamp;
-//     nonce = req.query.nonce;
-//     req.setEncoding('utf8');
-//     req.on("data", function (postDataChunk) {
-//         return postData += postDataChunk;
-//     });
-//     return req.on('end', Meteor.bindEnvironment(function () {
-//         let json, jsonPostData, message, result, _ref5;
-//         jsonPostData = {};
-//         jsonPostData = parser.toJson(postData, {
-//             object: true
-//         } || {});
-//         result = newCrypt.decrypt(jsonPostData != null ? (_ref5 = jsonPostData.xml) != null ? _ref5.Encrypt : void 0 : void 0);
-//         json = parser.toJson(result != null ? result.message : void 0, {
-//             object: true
-//         });
-//         message = (json != null ? json.xml : void 0) || {};
-//         switch (message != null ? message.InfoType : void 0) {
-//             case 'suite_ticket':
-//                 SuiteTicket(message);
-//                 res.writeHead(200, {
-//                     "Content-Type": "text/plain"
-//                 });
-//                 return res.end(result != null ? result.message : void 0);
-//             case 'create_auth':
-//                 res.writeHead(200, {
-//                     "Content-Type": "text/plain"
-//                 });
-//                 res.end("success");
-//                 return CreateAuth(message);
-//             case 'cancel_auth':
-//                 res.writeHead(200, {
-//                     "Content-Type": "text/plain"
-//                 });
-//                 res.end(result != null ? result.message : void 0);
-//                 return CancelAuth(message);
-//             case 'change_auth':
-//                 return ChangeContact(message.AuthCorpId);
-//             case 'change_contact':
-//                 return ChangeContact(message.AuthCorpId);
-//         }
-//     }));
-// });
+// 第三方回调协议
+router.post("/api/qiyeweixin/callback", async function (req, res, next) {
+    let msg_signature, nonce, postData, timestamp;
+    postData = '';
+    msg_signature = req.query.msg_signature;
+    timestamp = req.query.timestamp;
+    nonce = req.query.nonce;
+    req.setEncoding('utf8');
+    req.on("data", function (postDataChunk) {
+        return postData += postDataChunk;
+    });
+    return req.on('end', Meteor.bindEnvironment(function () {
+        let json, jsonPostData, message, result, _ref5;
+        jsonPostData = {};
+        jsonPostData = parser.toJson(postData);
+        jsonPostData = JSON.parse(jsonPostData);
+        result = newCrypt.decrypt(jsonPostData.xml.Encrypt);
+        json = parser.toJson(result.message);
+        json = JSON.parse(json);
+        message = json.xml || {};
+        switch (message != null ? message.InfoType : void 0) {
+            case 'suite_ticket':
+                SuiteTicket(message);
+                console.log("suite_ticket-----");
+                res.writeHead(200, {
+                    "Content-Type": "text/plain"
+                });
+                return res.end("success");
+            case 'create_auth':
+                console.log("create_auth-----");
+                res.writeHead(200, {
+                    "Content-Type": "text/plain"
+                });
+                res.end("success");
+                return CreateAuth(message);
+            case 'cancel_auth':
+                console.log("cancel_auth-----");
+                res.writeHead(200, {
+                    "Content-Type": "text/plain"
+                });
+                res.end(result != null ? result.message : void 0);
+                return CancelAuth(message);
+            case 'change_auth':
+                console.log("change_auth-----");
+                return ChangeContact(message.AuthCorpId);
+            case 'change_contact':
+                console.log("change_contact-----");
+                return ChangeContact(message.AuthCorpId);
+            case 'enter_agent':
+                console.log("enter_agent-----");
+                res.writeHead(200, {
+                    "Content-Type": "text/plain"
+                });
+                res.end("success");
+                return res.end(result != null ? result.message : void 0);
+        }
+    }));
+});
 
 // 通讯录变更，更新space表=============
 let ChangeContact = function (corp_id) {
@@ -252,7 +274,7 @@ let CreateAuth = function (message) {
         service: "qiyeweixin"
     });
     if (o) {
-        r = Qiyeweixin.getPermanentCode(message != null ? message.SuiteId : void 0, message != null ? message.AuthCode : void 0, o != null ? (_ref5 = o.secret) != null ? _ref5.suite_access_token : void 0 : void 0);
+        r = qiyeweixin.getPermanentCode(message != null ? message.SuiteId : void 0, message != null ? message.AuthCode : void 0, o != null ? (_ref5 = o.secret) != null ? _ref5.suite_access_token : void 0 : void 0);
         if (r && (r != null ? r.permanent_code : void 0)) {
             permanent_code = r.permanent_code;
             auth_corp_info = r.auth_corp_info;
@@ -304,7 +326,7 @@ let initSpace = function (service, name) {
         "services.qiyeweixin.corp_id": service.corp_id
     });
     if (newSpace) {
-        return Qiyeweixin.syncCompany(newSpace);
+        return _sync.syncCompany(newSpace);
     }
 };
 
@@ -315,12 +337,12 @@ let SuiteTicket = function (message) {
         service: "qiyeweixin"
     });
     if (o) {
-        r = Qiyeweixin.getSuiteAccessToken(o != null ? (_ref5 = o.secret) != null ? _ref5.suite_id : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.suite_secret : void 0 : void 0, message.SuiteTicket);
+        r = qiyeweixin.getSuiteAccessToken(o.suite_id, o.suite_secret, message.SuiteTicket);
         if (r && (r != null ? r.suite_access_token : void 0)) {
             return ServiceConfiguration.configurations.update(o._id, {
                 $set: {
-                    "secret.suite_ticket": message.SuiteTicket,
-                    "secret.suite_access_token": r.suite_access_token
+                    "suite_ticket": message.SuiteTicket,
+                    "suite_access_token": r.suite_access_token
                 },
                 $currentDate: {
                     "modified": true

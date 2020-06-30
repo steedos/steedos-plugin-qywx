@@ -1,13 +1,12 @@
-// const Qiyeweixin = {};
-// declare var Meteor;
-// declare var ServiceConfiguration;
-// declare var HTTP;
+let objectql = require('@steedos/objectql');
+const steedosConfig = objectql.getSteedosConfig();
+const Cookies = require("cookies");
 
 // 获取登录信息
-let getLoginInfo = function (access_token, auth_code) {
+exports.getLoginInfo = function (access_token, auth_code) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getLoginInfo : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getLoginInfo : void 0 : void 0;
         data = {
             auth_code: auth_code
         };
@@ -30,10 +29,10 @@ let getLoginInfo = function (access_token, auth_code) {
 };
 
 // 获取服务商的token
-let getProviderToken = function (corpid, provider_secret) {
+exports.getProviderToken = function (corpid, provider_secret) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getProviderToken : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getProviderToken : void 0 : void 0;
         data = {
             corpid: corpid,
             provider_secret: provider_secret
@@ -57,21 +56,24 @@ let getProviderToken = function (corpid, provider_secret) {
 };
 
 // 获取suite_access_token:OK
-let getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
+exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
+    console.log("getSuiteAccessToken-----");
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getSuiteAccessToken : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getSuiteAccessToken : void 0 : void 0;
         data = {
             suite_id: suite_id,
             suite_secret: suite_secret,
             suite_ticket: suite_ticket
         };
+        console.log("data---------: ",data);
         response = HTTP.post(qyapi, {
             data: data,
             headers: {
                 "Content-Type": "application/json"
             }
         });
+        console.log("response.statusCode----: ",response.statusCode);
         if (response.statusCode !== 200) {
             throw response;
         }
@@ -85,10 +87,10 @@ let getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
 };
 
 // 获取预授权码:OK
-let getPreAuthCode = function (suite_id, suite_access_token) {
+exports.getPreAuthCode = function (suite_id, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getPreAuthCode : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPreAuthCode : void 0 : void 0;
         data = {
             suite_id: suite_id
         };
@@ -111,10 +113,10 @@ let getPreAuthCode = function (suite_id, suite_access_token) {
 };
 
 // 获取企业永久授权码
-let getPermanentCode = function (suite_id, auth_code, suite_access_token) {
+exports.getPermanentCode = function (suite_id, auth_code, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getPermanentCode : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPermanentCode : void 0 : void 0;
         data = {
             suite_id: suite_id,
             auth_code: auth_code
@@ -138,10 +140,10 @@ let getPermanentCode = function (suite_id, auth_code, suite_access_token) {
 };
 
 // 获取CorpToken
-let getCorpToken = function (auth_corpid, permanent_code, suite_access_token) {
+exports.getCorpToken = function (auth_corpid, permanent_code, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getCorpToken : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getCorpToken : void 0 : void 0;
         data = {
             auth_corpid: auth_corpid,
             permanent_code: permanent_code
@@ -165,13 +167,13 @@ let getCorpToken = function (auth_corpid, permanent_code, suite_access_token) {
 };
 
 // 获取管理员列表
-let getAdminList = function (auth_corpid, agentid) {
+exports.getAdminList = function (auth_corpid, agentid) {
     var data, o, qyapi, response, _ref, _ref2, _ref3;
     try {
         o = ServiceConfiguration.configurations.findOne({
             service: "qiyeweixin"
         });
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getAdminList : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAdminList : void 0 : void 0;
         data = {
             auth_corpid: auth_corpid,
             agentid: agentid
@@ -195,14 +197,14 @@ let getAdminList = function (auth_corpid, agentid) {
 };
 
 // 获取用户信息
-let getUserInfo3rd = function (code) {
+exports.getUserInfo3rd = function (code) {
     var getUserInfo3rdUrl, o, qyapi, response, _ref, _ref2, _ref3;
     try {
         o = ServiceConfiguration.configurations.findOne({
             service: "qiyeweixin"
         });
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
-        getUserInfo3rdUrl = qyapi + "?access_token=" + (o != null ? (_ref3 = o.secret) != null ? _ref3.suite_access_token : void 0 : void 0) + "&code=" + code;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
+        getUserInfo3rdUrl = qyapi + "?access_token=" + (o != null ? (_ref3 = o) != null ? _ref3.suite_access_token : void 0 : void 0) + "&code=" + code;
         response = HTTP.get(getUserInfo3rdUrl);
         if (response.error_code) {
             throw response.msg;
@@ -220,10 +222,10 @@ let getUserInfo3rd = function (code) {
 };
 
 // 获取部门下用户列表
-let getUserList = function (access_token, department_id) {
+exports.getUserList = function (access_token, department_id) {
     var getUserListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserList : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserList : void 0 : void 0;
         getUserListUrl = qyapi + "?access_token=" + access_token + "&department_id=" + department_id + "&fetch_child=0";
         response = HTTP.get(getUserListUrl);
         if (response.error_code) {
@@ -243,10 +245,10 @@ let getUserList = function (access_token, department_id) {
 };
 
 // 获取当前公司所有用户列表
-let getAllUserList = function (access_token) {
+exports.getAllUserList = function (access_token) {
     var getAllUserListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getAllUserList : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAllUserList : void 0 : void 0;
         getAllUserListUrl = qyapi + "?access_token=" + access_token + "&department_id=1&fetch_child=1";
         response = HTTP.get(getAllUserListUrl);
         if (response.error_code) {
@@ -266,10 +268,10 @@ let getAllUserList = function (access_token) {
 };
 
 // 获取部门列表（全量）
-let getDepartmentList = function (access_token) {
+exports.getDepartmentList = function (access_token) {
     var getDepartmentListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = Meteor.settings.qiyeweixin) != null ? (_ref2 = _ref.api) != null ? _ref2.getDepartmentList : void 0 : void 0;
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getDepartmentList : void 0 : void 0;
         getDepartmentListUrl = qyapi + "?access_token=" + access_token;
         response = HTTP.get(getDepartmentListUrl);
         if (response.error_code) {
@@ -286,4 +288,41 @@ let getDepartmentList = function (access_token) {
             response: err
         });
     }
+};
+
+// 设置cookies
+exports.setAuthCookies = function(req, res, userId, authToken) {
+    var cookies;
+    cookies = new Cookies(req, res);
+    cookies.set("X-User-Id", userId, {
+        maxAge: 90 * 60 * 60 * 24 * 1000,
+        httpOnly: false,
+        overwrite: true
+    });
+    return cookies.set("X-Auth-Token", authToken, {
+        maxAge: 90 * 60 * 60 * 24 * 1000,
+        httpOnly: false,
+        overwrite: true
+    });
+};
+
+// 清理cookies
+exports.clearAuthCookies = function(req, res) {
+    var cookies, uri;
+    cookies = new Cookies(req, res);
+    cookies.set("X-User-Id");
+    cookies.set("X-Auth-Token");
+    if (req.headers.origin) {
+        uri = new URI(req.headers.origin);
+    } else if (req.headers.referer) {
+        uri = new URI(req.headers.referer);
+    }
+    cookies.set("X-User-Id", "", {
+        domain: uri != null ? uri.domain() : void 0,
+        overwrite: true
+    });
+    return cookies.set("X-Auth-Token", "", {
+        domain: uri != null ? uri.domain() : void 0,
+        overwrite: true
+    });
 };
