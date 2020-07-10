@@ -1,9 +1,11 @@
 let newCrypt, _ref, _ref2, _ref3, _ref4;
 const Cookies = require("cookies");
 let express = require('express');
+const jsdom = require("jsdom");
+const JSDOM = jsdom.JSDOM;
 let router = express.Router();
 let parser = require('xml2json');
-let qiyeweixin = require('./qywx');
+let Qiyeweixin = require('./qywx');
 let _sync = require('./sync');
 let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
@@ -29,7 +31,6 @@ let TICKET_EXPIRES_IN = (config != null ? (_ref4 = config.secret) != null ? _ref
 
 // 
 router.use("/qywx", async function (req, res, next) {
-    console.log("qywxqywxqywxqywx");
     await next();
 });
 
@@ -41,6 +42,7 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
     });
     if (o) {
         redirect_uri = encodeURIComponent(Meteor.absoluteUrl('api/qiyeweixin/auth_login'));
+        console.log("redirect_uri----: ",redirect_uri);
         authorize_uri = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.authorize_uri : void 0 : void 0;
         appid = o != null ? (_ref7 = o.secret) != null ? _ref7.corpid : void 0 : void 0;
         url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + '&response_type=code&scope=snsapi_base#wechat_redirect';
@@ -61,7 +63,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     console.log("authToken: ",authToken);
     console.log("req.query.code: ",req.query.code);
     if (req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) {
-        userInfo = qiyeweixin.getUserInfo3rd(req.query.code);
+        userInfo = Qiyeweixin.getUserInfo3rd(req.query.code);
     } else {
         res.writeHead(200, {
             'Content-Type': 'text/html'
@@ -85,7 +87,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     }
     if (userId && authToken) {
         if (user._id !== userId) {
-            qiyeweixin.clearAuthCookies(req, res);
+            Qiyeweixin.clearAuthCookies(req, res);
             hashedToken = Accounts._hashLoginToken(authToken);
             Accounts.destroyToken(userId, hashedToken);
         } else {
@@ -98,10 +100,13 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     authToken = Accounts._generateStampedLoginToken();
     hashedToken = Accounts._hashStampedToken(authToken);
     Accounts._insertHashedLoginToken(user._id, hashedToken);
-    qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
+    Qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
+    console.log("/api/qiyeweixin/auth_login-----------");
     res.writeHead(302, {
         'Location': '/'
     });
+    res.write('<script src="https://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>');
+    res.write('<script src="https://open.work.weixin.qq.com/wwopen/js/jwxwork-1.0.0.js"></script>');
     return res.end('');
 });
 
@@ -111,19 +116,19 @@ router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
     o = ServiceConfiguration.configurations.findOne({
         service: "qiyeweixin"
     });
-    at = qiyeweixin.getProviderToken(o != null ? (_ref5 = o.secret) != null ? _ref5.corpid : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.provider_secret : void 0 : void 0);
+    at = Qiyeweixin.getProviderToken(o != null ? (_ref5 = o.secret) != null ? _ref5.corpid : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.provider_secret : void 0 : void 0);
     if (at && at.provider_access_token) {
-        loginInfo = qiyeweixin.getLoginInfo(at.provider_access_token, req.query.auth_code);
+        loginInfo = Qiyeweixin.getLoginInfo(at.provider_access_token, req.query.auth_code);
         if (loginInfo != null ? (_ref7 = loginInfo.user_info) != null ? _ref7.userid : void 0 : void 0) {
             console.log("loginInfo.user_info.userid: ",loginInfo.user_info.userid);
-            user = db.users.findOne({
-                'services.qiyeweixin.id': loginInfo.user_info.userid
+            user = db.space_users.findOne({
+                'qywx_id': loginInfo.user_info.userid
             });
             if (user) {
                 authToken = Accounts._generateStampedLoginToken();
                 hashedToken = Accounts._hashStampedToken(authToken);
                 Accounts._insertHashedLoginToken(user._id, hashedToken);
-                qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
+                Qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
                 res.writeHead(302, {
                     'Location': '/'
                 });
@@ -160,6 +165,7 @@ router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
 // 创建套件使用，验证第三方回调协议可用性
 router.get("/api/qiyeweixin/callback", async function (req, res, next) {
     let result = newCrypt.decrypt(req.query.echostr);
+    console.log("result：",result);
     res.writeHead(200, {
         "Content-Type": "text/plain"
     });
@@ -173,6 +179,7 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
     msg_signature = req.query.msg_signature;
     timestamp = req.query.timestamp;
     nonce = req.query.nonce;
+    console.log("nonce-----: ",nonce);
     req.setEncoding('utf8');
     req.on("data", function (postDataChunk) {
         return postData += postDataChunk;
@@ -186,59 +193,92 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
         json = parser.toJson(result.message);
         json = JSON.parse(json);
         message = json.xml || {};
-        switch (message != null ? message.InfoType : void 0) {
-            case 'suite_ticket':
-                SuiteTicket(message);
-                console.log("suite_ticket-----");
-                res.writeHead(200, {
-                    "Content-Type": "text/plain"
-                });
-                return res.end("success");
-            case 'create_auth':
-                console.log("create_auth-----");
-                res.writeHead(200, {
-                    "Content-Type": "text/plain"
-                });
-                res.end("success");
-                return CreateAuth(message);
-            case 'cancel_auth':
-                console.log("cancel_auth-----");
-                res.writeHead(200, {
-                    "Content-Type": "text/plain"
-                });
-                res.end(result != null ? result.message : void 0);
-                return CancelAuth(message);
-            case 'change_auth':
-                console.log("change_auth-----");
-                return ChangeContact(message.AuthCorpId);
-            case 'change_contact':
-                console.log("change_contact-----");
-                return ChangeContact(message.AuthCorpId);
-            case 'enter_agent':
+        console.log("message----------: ",message);
+        if (!message.InfoType){
+            if (message.Event == "enter_agent"){
                 console.log("enter_agent-----");
                 res.writeHead(200, {
                     "Content-Type": "text/plain"
                 });
                 res.end("success");
-                return res.end(result != null ? result.message : void 0);
+                return res.end("success");
+            }
+        }else{
+            switch (message != null ? message.InfoType : void 0) {
+                case 'suite_ticket':
+                    SuiteTicket(message);
+                    console.log("suite_ticket-----");
+                    res.writeHead(200, {
+                        "Content-Type": "text/plain"
+                    });
+                    return res.end("success");
+                case 'create_auth':
+                    console.log("create_auth-----");
+                    res.writeHead(200, {
+                        "Content-Type": "text/plain"
+                    });
+                    res.end("success");
+                    return CreateAuth(message);
+                case 'cancel_auth':
+                    console.log("cancel_auth-----");
+                    res.writeHead(200, {
+                        "Content-Type": "text/plain"
+                    });
+                    res.end(result != null ? result.message : void 0);
+                    return CancelAuth(message);
+                case 'change_auth':
+                    console.log("change_auth-----");
+                    return ChangeContact(message.AuthCorpId);
+                case 'change_contact':
+                    console.log("change_contact-----");
+                    return ChangeContact(message.AuthCorpId);
+                
+            }
         }
+        
     }));
+});
+
+router.post("/api/qiyeweixin/push", async function (req, res, next) {
+    let qywx_userId = req.body.qywx_userId;
+    let agentid = req.body.agentid;
+    let text = req.body.text;
+
+    let msg = {
+        "touser" : qywx_userId,
+        "msgtype" : "text",
+        "agentid" : agentid,
+        "text" : {
+            "content" : text
+        },
+        "safe":0,
+        "enable_id_trans": 0,
+        "enable_duplicate_check": 0,
+        "duplicate_check_interval": 1800
+    }
+
+    let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.sendMessage : void 0 : void 0;
+    res.writeHead(302, {
+        'Location': url
+    });
+    return res.end('');
 });
 
 // 通讯录变更，更新space表=============
 let ChangeContact = function (corp_id) {
     let s_qywx, space;
     space = Creator.getCollection("spaces").findOne({
-        'services.qiyeweixin.corp_id': corp_id
+        'qywx_corp_id': corp_id
     });
     if (space) {
         s_qywx = space.services.qiyeweixin;
         s_qywx.remote_modified = new Date;
-        s_qywx.need_sync = true;
+        // s_qywx.need_sync = true;
         return Creator.getCollection("spaces").direct.update({
             _id: space._id
         }, {
             $set: {
+                qywx_need_sync: true,
                 'services.qiyeweixin': s_qywx
             }
         });
@@ -250,16 +290,17 @@ let CancelAuth = function (message) {
     let corp_id, s_qywx, space;
     corp_id = message.AuthCorpId;
     space = Creator.getCollection("spaces").findOne({
-        'services.qiyeweixin.corp_id': corp_id
+        'qywx_corp_id': corp_id
     });
     if (space) {
         s_qywx = space.services.qiyeweixin;
         s_qywx.permanent_code = void 0;
-        s_qywx.need_sync = false;
+        // s_qywx.need_sync = false;
         return Creator.getCollection("spaces").direct.update({
             _id: space._id
         }, {
             $set: {
+                qywx_need_sync: false,
                 is_deleted: true,
                 'services.qiyeweixin': s_qywx
             }
@@ -274,7 +315,7 @@ let CreateAuth = function (message) {
         service: "qiyeweixin"
     });
     if (o) {
-        r = qiyeweixin.getPermanentCode(message != null ? message.SuiteId : void 0, message != null ? message.AuthCode : void 0, o != null ? (_ref5 = o.secret) != null ? _ref5.suite_access_token : void 0 : void 0);
+        r = Qiyeweixin.getPermanentCode(message != null ? message.SuiteId : void 0, message != null ? message.AuthCode : void 0, o != null ? (_ref5 = o) != null ? _ref5.suite_access_token : void 0 : void 0);
         if (r && (r != null ? r.permanent_code : void 0)) {
             permanent_code = r.permanent_code;
             auth_corp_info = r.auth_corp_info;
@@ -293,11 +334,11 @@ let CreateAuth = function (message) {
 let initSpace = function (service, name) {
     let doc, modified, newSpace, space;
     space = Creator.getCollection("spaces").findOne({
-        "services.qiyeweixin.corp_id": service.corp_id
+        "qywx_corp_id": service.corp_id
     });
     if (space) {
         service.remote_modified = new Date;
-        service.need_sync = true;
+        // service.need_sync = true;
         modified = new Date;
         newSpace = Creator.getCollection("spaces").direct.update({
             _id: space._id
@@ -311,11 +352,11 @@ let initSpace = function (service, name) {
         });
     } else {
         doc = {};
-        doc._id = 'qywx-' + service.corp_id;
+        doc.qywx_corp_id = service.corp_id;
         doc.name = name;
         doc.is_deleted = false;
         doc.created = new Date;
-        service.need_sync = true;
+        doc.qywx_need_sync = true;
         service.remote_modified = new Date;
         doc.services = {
             qiyeweixin: service
@@ -323,7 +364,7 @@ let initSpace = function (service, name) {
         newSpace = Creator.getCollection("spaces").direct.insert(doc);
     }
     newSpace = Creator.getCollection("spaces").findOne({
-        "services.qiyeweixin.corp_id": service.corp_id
+        "qywx_corp_id": service.corp_id
     });
     if (newSpace) {
         return _sync.syncCompany(newSpace);
@@ -337,7 +378,7 @@ let SuiteTicket = function (message) {
         service: "qiyeweixin"
     });
     if (o) {
-        r = qiyeweixin.getSuiteAccessToken(o.suite_id, o.suite_secret, message.SuiteTicket);
+        r = Qiyeweixin.getSuiteAccessToken(o.suite_id, o.suite_secret, message.SuiteTicket);
         if (r && (r != null ? r.suite_access_token : void 0)) {
             return ServiceConfiguration.configurations.update(o._id, {
                 $set: {

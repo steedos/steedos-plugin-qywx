@@ -16,7 +16,7 @@ exports.startSyncCompany = function() {
       {
         'is_deleted': false
       }, {
-        'services.qiyeweixin.need_sync': true
+        'qywx_need_sync': true
       }
     ]
   }).fetch();
@@ -34,10 +34,11 @@ exports.syncCompany = function(space) {
   o = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
   });
-  at = Qiyeweixin.getCorpToken(service.corp_id, service.permanent_code, o != null ? (ref = o.secret) != null ? ref.suite_access_token : void 0 : void 0);
+  at = Qiyeweixin.getCorpToken(service.corp_id, service.permanent_code, o.suite_access_token);
   if (at && at.access_token) {
     service.access_token = at.access_token;
   }
+  console.log("at.access_token------:",at.access_token);
   allOrganizations = [];
   allUsers = [];
   orgList = Qiyeweixin.getDepartmentList(service.access_token);
@@ -112,7 +113,7 @@ exports.syncCompany = function(space) {
   });
 };
 
-exports.initRootOrganization = function(space, orgIds) {
+initRootOrganization = function(space, orgIds) {
   var rootOrg;
   rootOrg = {};
   rootOrg.id = 1;
@@ -130,7 +131,7 @@ exports.initRootOrganization = function(space, orgIds) {
   return manageOrganizations(rootOrg);
 };
 
-exports.manageSpaces = function(space) {
+manageSpaces = function(space) {
   var admins, doc, service, space_admin_data;
   service = space.services.qiyeweixin;
   space_admin_data = Qiyeweixin.getAdminList(service.corp_id, service.agentid);
@@ -138,8 +139,8 @@ exports.manageSpaces = function(space) {
   space_admin_data.forEach(function(admin) {
     var admin_user;
     if (admin.auth_type) {
-      admin_user = db.users.findOne({
-        "services.qiyeweixin.id": admin.userid
+      admin_user = db.space_users.findOne({
+        "qywx_id": admin.userid
       }, {
         _id: 1
       });
@@ -153,7 +154,8 @@ exports.manageSpaces = function(space) {
   doc.owner = admins[0];
   doc.modified = new Date;
   service.sync_modified = new Date;
-  service.need_sync = false;
+  // service.need_sync = false;
+  doc.qywx_need_sync = false;
   delete service.access_token;
   doc.services = {
     qiyeweixin: service
@@ -163,7 +165,7 @@ exports.manageSpaces = function(space) {
   });
 };
 
-exports.manageOrganizations = function(organization) {
+manageOrganizations = function(organization) {
   var org;
   org = db.organizations.findOne({
     $and: [
@@ -181,7 +183,7 @@ exports.manageOrganizations = function(organization) {
   }
 };
 
-exports.manageSpaceUser = function(user, orgIds) {
+manageSpaceUser = function(user, orgIds) {
   var su;
   su = db.space_users.findOne({
     $and: [
@@ -199,14 +201,14 @@ exports.manageSpaceUser = function(user, orgIds) {
   }
 };
 
-exports.manageUser = function(user) {
+manageUser = function(user) {
   var u, userid;
-  u = db.users.findOne({
-    "services.qiyeweixin.id": user.userid
+  u = db.space_users.findOne({
+    "qywx_id": user.userid
   });
   userid = '';
   if (u) {
-    userid = u._id;
+    userid = u.user;
     updateUser(u, user);
   } else {
     userid = addUser(user);
@@ -214,7 +216,7 @@ exports.manageUser = function(user) {
   return userid;
 };
 
-exports.addOrganization = function(organization) {
+addOrganization = function(organization) {
   var doc, parents;
   doc = {};
   doc._id = organization._id;
@@ -236,7 +238,7 @@ exports.addOrganization = function(organization) {
   return db.organizations.direct.insert(doc);
 };
 
-exports.addSpaceUser = function(user, orgIds) {
+addSpaceUser = function(user, orgIds) {
   var doc, organizations;
   doc = {};
   doc._id = user.space + '-' + user.userid;
@@ -261,7 +263,7 @@ exports.addSpaceUser = function(user, orgIds) {
   return db.space_users.direct.insert(doc);
 };
 
-exports.addUser = function(user) {
+addUser = function(user) {
   var doc, userid;
   doc = {};
   doc._id = db.users._makeNewID();
@@ -281,7 +283,7 @@ exports.addUser = function(user) {
   return userid;
 };
 
-exports.updateOrganization = function(old_org, new_org) {
+updateOrganization = function(old_org, new_org) {
   var doc, parents;
   doc = {};
   if (old_org.name !== new_org.name) {
@@ -313,7 +315,7 @@ exports.updateOrganization = function(old_org, new_org) {
   }
 };
 
-exports.updateSpaceUser = function(old_su, new_su, orgIds) {
+updateSpaceUser = function(old_su, new_su, orgIds) {
   var doc, organizations;
   doc = {};
   if (old_su.name !== new_su.name) {
@@ -342,7 +344,7 @@ exports.updateSpaceUser = function(old_su, new_su, orgIds) {
   }
 };
 
-exports.updateUser = function(old_user, new_user) {
+updateUser = function(old_user, new_user) {
   var doc;
   doc = {};
   if (old_user.name !== new_user.name) {

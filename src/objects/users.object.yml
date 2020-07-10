@@ -1,0 +1,6 @@
+extend: users
+fields:
+  qywx_id:
+    label: 企业微信id
+    type: text
+    hidden: true

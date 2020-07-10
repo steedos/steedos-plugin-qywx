@@ -204,7 +204,8 @@ exports.getUserInfo3rd = function (code) {
             service: "qiyeweixin"
         });
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
-        getUserInfo3rdUrl = qyapi + "?access_token=" + (o != null ? (_ref3 = o) != null ? _ref3.suite_access_token : void 0 : void 0) + "&code=" + code;
+        getUserInfo3rdUrl = qyapi + "?access_token=" + o.suite_access_token + "&code=" + code;
+        console.log("getUserInfo3rdUrl: ",getUserInfo3rdUrl);
         response = HTTP.get(getUserInfo3rdUrl);
         if (response.error_code) {
             throw response.msg;
@@ -269,6 +270,7 @@ exports.getAllUserList = function (access_token) {
 
 // 获取部门列表（全量）
 exports.getDepartmentList = function (access_token) {
+    console.log("access_token: ",access_token);
     var getDepartmentListUrl, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getDepartmentList : void 0 : void 0;

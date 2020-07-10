@@ -1,0 +1,10 @@
+extend: spaces
+fields:
+  qywx_corp_id:
+    label: 企业微信工作区id
+    type: text
+    hidden: false
+  qywx_need_sync:
+    label: 同步企业微信工作区
+    type: boolean
+    hidden: false
