@@ -1,9 +1,12 @@
 let objectql = require('@steedos/objectql');
 const steedosConfig = objectql.getSteedosConfig();
 const Cookies = require("cookies");
+let Hashes = require("jshashes");
+let SHA1 = new Hashes.SHA1;
 
 // 获取登录信息
 exports.getLoginInfo = function (access_token, auth_code) {
+    console.log('getLoginInfo access_token: ',access_token);
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getLoginInfo : void 0 : void 0;
@@ -290,6 +293,13 @@ exports.getDepartmentList = function (access_token) {
             response: err
         });
     }
+};
+
+// 获取签名
+exports.getSignature = function(jsapiticket, noncestr, timestamp, url){
+    let string1 = 'jsapi_ticket=' + jsapiticket + '&noncestr=' + noncestr + '&timestamp=' + timestamp + '&url=' + url;
+    let sign = SHA1.hex(string1);
+    return sign;
 };
 
 // 设置cookies
