@@ -342,7 +342,8 @@ exports.clearAuthCookies = function(req, res) {
 // 发送消息
 exports.sendMessage = function(data,access_token){
     try {
-        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.sendMessage : void 0 : void 0;
+        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.api.sendMessage : void 0 : void 0;
+        console.log("url-------- ",url);
         let response = HTTP.post(url + "?access_token=" + access_token, {
             data: data,
             headers: {
