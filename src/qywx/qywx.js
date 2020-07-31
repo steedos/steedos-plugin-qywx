@@ -338,3 +338,25 @@ exports.clearAuthCookies = function(req, res) {
         overwrite: true
     });
 };
+
+// 发送消息
+exports.sendMessage = function(data,access_token){
+    try {
+        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.sendMessage : void 0 : void 0;
+        let response = HTTP.post(url + "?access_token=" + access_token, {
+            data: data,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (response.statusCode !== 200) {
+            throw response;
+        }
+        return response.data;
+    } catch (err) {
+        console.error(err);
+        throw _.extend(new Error("Failed to send message with error: " + err), {
+            response: err
+        });
+    }
+}

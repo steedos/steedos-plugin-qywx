@@ -40,6 +40,8 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
     o = ServiceConfiguration.configurations.findOne({
         service: "qiyeweixin"
     });
+    let signature = Qiyeweixin.getSignature();
+    console.log("-------------signature----------：",signature);
     if (o) {
         redirect_uri = encodeURIComponent(Meteor.absoluteUrl('api/qiyeweixin/auth_login'));
         console.log("redirect_uri----: ",redirect_uri);
@@ -59,9 +61,6 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     cookies = new Cookies(req, res);
     userId = cookies.get("X-User-Id");
     authToken = cookies.get("X-Auth-Token");
-    console.log("userId: ",userId);
-    console.log("authToken: ",authToken);
-    console.log("req.query.code: ",req.query.code);
     if (req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) {
         userInfo = Qiyeweixin.getUserInfo3rd(req.query.code);
     } else {
@@ -105,8 +104,6 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     res.writeHead(302, {
         'Location': '/'
     });
-    res.write('<script src="https://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>');
-    res.write('<script src="https://open.work.weixin.qq.com/wwopen/js/jwxwork-1.0.0.js"></script>');
     return res.end('');
 });
 
@@ -118,6 +115,7 @@ router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
     });
     at = Qiyeweixin.getProviderToken(o != null ? (_ref5 = o.secret) != null ? _ref5.corpid : void 0 : void 0, o != null ? (_ref6 = o.secret) != null ? _ref6.provider_secret : void 0 : void 0);
     if (at && at.provider_access_token) {
+        console.log("at.provider_access_token: ",at.provider_access_token);
         loginInfo = Qiyeweixin.getLoginInfo(at.provider_access_token, req.query.auth_code);
         if (loginInfo != null ? (_ref7 = loginInfo.user_info) != null ? _ref7.userid : void 0 : void 0) {
             console.log("loginInfo.user_info.userid: ",loginInfo.user_info.userid);
@@ -239,15 +237,25 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
     }));
 });
 
+// 推送消息
 router.post("/api/qiyeweixin/push", async function (req, res, next) {
     let qywx_userId = req.body.qywx_userId;
-    let agentid = req.body.agentid;
+    let agentId = req.body.agentid;
+    let spaceId = req.body.spaceId;
     let text = req.body.text;
-
+    let space = Creator.getCollection('spaces').findOne({_id: spaceId});
+    let service = space.services.qiyeweixin;
+    let o = ServiceConfiguration.configurations.findOne({
+        service: "qiyeweixin"
+    });
+    at = Qiyeweixin.getCorpToken(service.corp_id, service.permanent_code, o.suite_access_token);
+    if (at && at.access_token) {
+        service.access_token = at.access_token;
+    }
     let msg = {
         "touser" : qywx_userId,
         "msgtype" : "text",
-        "agentid" : agentid,
+        "agentid" : agentId,
         "text" : {
             "content" : text
         },
@@ -257,11 +265,8 @@ router.post("/api/qiyeweixin/push", async function (req, res, next) {
         "duplicate_check_interval": 1800
     }
 
-    let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.sendMessage : void 0 : void 0;
-    res.writeHead(302, {
-        'Location': url
-    });
-    return res.end('');
+    Qiyeweixin.sendMessage(msg,service.access_token);
+    return res.end("success");
 });
 
 // 通讯录变更，更新space表=============
