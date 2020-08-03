@@ -1,7 +1,11 @@
 {
-    "name": "app",
+    "name": "@steedos/plugin-qywx",
     "version": "0.0.1",
+    "private": false,
     "description": "",
+    "publishConfig": {
+        "access": "public"
+      },
     "main": "lib/index.js",
     "scripts": {
         "debug": "tsc && nodemon server.js",
@@ -31,7 +35,7 @@
     "devDependencies": {
         "nodemon": "^1.19.1"
     },
-    "homepage": "https://developer.steedos.com",
+    "homepage": "https://github.com/steedos/steedos-plugin-qywx#readme",
     "resolutions": {
         "**/lodash": "^4.17.15",
         "**/handlebars": "^4.3.0",
