@@ -9,6 +9,7 @@ let Qiyeweixin = require('./qywx');
 let _sync = require('./sync');
 let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
+const auth = require("@steedos/auth");
 const steedosConfig = objectql.getSteedosConfig();
 let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
@@ -28,8 +29,6 @@ if (config) {
 let TICKET_EXPIRES_IN = (config != null ? (_ref4 = config.secret) != null ? _ref4.ticket_expires_in : void 0 : void 0) || 1000 * 60 * 20;
 
 
-
-// 
 router.use("/qywx", async function (req, res, next) {
     await next();
 });
@@ -57,7 +56,7 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
 
 // 网页授权登录
 router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
-    let authToken, cookies, hashedToken, user, userId, userInfo, _ref5;
+    let authToken, cookies, hashedToken, user, userId, userInfo, _ref5, space, spaceId;
     cookies = new Cookies(req, res);
     userId = cookies.get("X-User-Id");
     authToken = cookies.get("X-Auth-Token");
@@ -72,9 +71,21 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
         res.write('<h2>未从企业微信获取到网页授权码</h2>');
         return res.end('');
     }
-    user = Creator.getCollection("users").findOne({
-        'services.qiyeweixin.id': userInfo != null ? userInfo.UserId : void 0
+    console.log("--------userInfo: ",userInfo);
+    user = Creator.getCollection("space_users").findOne({
+        'qywx_id': userInfo != null ? userInfo.UserId : void 0
     });
+    space = Creator.getCollection("spaces").findOne({
+        'qywx_corp_id': userInfo != null ? userInfo.CorpId : void 0
+    });
+    
+    // 默认工作区
+    if (space){
+        spaceId = space._id;
+    }else{
+        spaceId = "";
+    }
+
     if (!user) {
         res.writeHead(200, {
             'Content-Type': 'text/html'
@@ -85,25 +96,23 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
         return res.end('');
     }
     if (userId && authToken) {
-        if (user._id !== userId) {
+        if (user.user !== userId) {
+            console.log("user.user !== userId");
             Qiyeweixin.clearAuthCookies(req, res);
             hashedToken = Accounts._hashLoginToken(authToken);
             Accounts.destroyToken(userId, hashedToken);
         } else {
-            res.writeHead(302, {
-                'Location': '/'
-            });
+            res.redirect(302, '/');
             return res.end('');
         }
     }
-    authToken = Accounts._generateStampedLoginToken();
-    hashedToken = Accounts._hashStampedToken(authToken);
-    Accounts._insertHashedLoginToken(user._id, hashedToken);
-    Qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
-    console.log("/api/qiyeweixin/auth_login-----------");
-    res.writeHead(302, {
-        'Location': '/'
-    });
+    let stampedAuthToken = auth.generateStampedLoginToken();
+    authtToken = stampedAuthToken.token;
+    hashedToken = auth.hashStampedToken(stampedAuthToken);
+    await auth.insertHashedLoginToken(user.user, hashedToken);
+    auth.setAuthCookies(req, res, user.user, authtToken, spaceId);
+    res.setHeader('X-Space-Token', spaceId + ',' + authtToken);
+    res.redirect(302, '/');
     return res.end('');
 });
 
