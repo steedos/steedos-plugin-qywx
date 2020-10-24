@@ -271,7 +271,7 @@ router.post("/api/qiyeweixin/push", async function (req, res, next) {
         "safe":0,
         "enable_id_trans": 0,
         "enable_duplicate_check": 0,
-        "duplicate_check_interval": 1800
+        "duplicate_check_interval": 1
     }
 
     Qiyeweixin.sendMessage(msg,service.access_token);
@@ -377,12 +377,12 @@ let initSpace = function (service, name) {
         };
         newSpace = Creator.getCollection("spaces").direct.insert(doc);
     }
-    newSpace = Creator.getCollection("spaces").findOne({
-        "qywx_corp_id": service.corp_id
-    });
-    if (newSpace) {
-        return _sync.syncCompany(newSpace);
-    }
+    // newSpace = Creator.getCollection("spaces").findOne({
+    //     "qywx_corp_id": service.corp_id
+    // });
+    // if (newSpace) {
+    //     return _sync.syncCompany(newSpace);
+    // }
 };
 
 // 根据suite_ticket，获取suite_access_token

@@ -3,10 +3,12 @@ fields:
   qywx_id:
     label: 企业微信用户id
     type: text
-    unique: true
     hidden: false
-  
   qywx_space:
     label: 企业微信工作区
     type: text
     hidden: true
+permission_set:
+  user:
+    uneditable_fields:
+      - qywx_id

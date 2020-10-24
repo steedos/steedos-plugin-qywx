@@ -5,7 +5,7 @@ fields:
     type: text
     hidden: false
   qywx_need_sync:
-    label: 同步企业微信工作区
+    label: 同步企业微信
     type: boolean
     defaultValue: false
     hidden: false
