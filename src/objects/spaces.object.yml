@@ -3,6 +3,7 @@ fields:
   qywx_corp_id:
     label: 企业微信工作区id
     type: text
+    unique: true
     hidden: false
   qywx_need_sync:
     label: 同步企业微信
