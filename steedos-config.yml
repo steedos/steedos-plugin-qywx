@@ -15,6 +15,7 @@ email:
 qywx:
   sync_interval: 60000
   authorize_uri: https://open.weixin.qq.com/connect/oauth2/authorize
+  workflow_url: ${ROOT_URL}
   api:
     getLoginInfo: https://qyapi.weixin.qq.com/cgi-bin/service/get_login_info
     getProviderToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_provider_token

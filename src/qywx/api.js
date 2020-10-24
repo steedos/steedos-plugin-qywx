@@ -11,6 +11,10 @@ let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
 const auth = require("@steedos/auth");
 const steedosConfig = objectql.getSteedosConfig();
+let notifi = require('./notifications');
+
+// import { Mongo } from 'meteor/mongo';
+
 let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
 });
@@ -23,6 +27,8 @@ ServiceConfiguration.configurations.update(config._id, {
         "modified": true
     }
 });
+
+
 if (config) {
     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
 }
