@@ -95,7 +95,7 @@ let workflowPush = function(options,url){
     let instanceId = options.payload.instance;
     let instance = Creator.getCollection('instances').findOne({_id:instanceId});
     
-    let instanceUrl = options.payload.host + 'workflow/space/' + spaceId + '/inbox/' + instanceId;
+    let instanceUrl = url;
     
     let text = "请审批 " + '<a href=' + instanceUrl + '>' + options.text + '</a>';
     
