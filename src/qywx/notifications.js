@@ -1,6 +1,4 @@
 let Qiyeweixin = require("./qywx")
-let objectql = require('@steedos/objectql');
-const steedosConfig = objectql.getSteedosConfig();
 
 Meteor.startup(function(){
     Push.oldSend = Push.send;
@@ -16,6 +14,10 @@ Meteor.startup(function(){
                 return;
             
             let space = Creator.getCollection('spaces').findOne({_id: options.payload.space});
+            
+            if (!space)
+                return;
+            
             if (!space.services.qiyeweixin)
                 return;
             
@@ -34,28 +36,28 @@ Meteor.startup(function(){
             
             // 审批流程
             if (payload.instance){
-                url = payload.host + 'workflow/space/' + spaceId + '/inbox/' + payload.instance;
-                text = workflowPush(options,url);
+                text = workflowPush(options,spaceId);
             }else{
                 url = payload.host + payload.url;
             }
             
-            // 知识推送
-            if (payload.related_to.o == "cms_posts")
-                text = cms_postsPush(options,url);
-            
-            // 公告推送
-            if (payload.related_to.o == "announcements")
-                text = announcementsPush(options,url);
-            
-            // 任务推送
-            if (payload.related_to.o == "tasks")
-                text = tasksPush(options,url);
-            
-            // 日程推送
-            if (payload.related_to.o == "events")
-                text = eventsPush(options,url);
-            
+            if (payload.related_to){
+                // 知识推送
+                if (payload.related_to.o == "cms_posts")
+                    text = cms_postsPush(options,url);
+                
+                // 公告推送
+                if (payload.related_to.o == "announcements")
+                    text = announcementsPush(options,url);
+                
+                // 任务推送
+                if (payload.related_to.o == "tasks")
+                    text = tasksPush(options,url);
+                
+                // 日程推送
+                if (payload.related_to.o == "events")
+                    text = eventsPush(options,url);
+            }
             
             let o = ServiceConfiguration.configurations.findOne({
                 service: "qiyeweixin"
@@ -87,7 +89,7 @@ Meteor.startup(function(){
 })
 
 // 待审核推送
-let workflowPush = function(options,url){
+let workflowPush = function(options,spaceId){
     if (!options || (options == {}))
         return false;
     
@@ -95,12 +97,14 @@ let workflowPush = function(options,url){
     let instanceId = options.payload.instance;
     let instance = Creator.getCollection('instances').findOne({_id:instanceId});
     
-    let instanceUrl = url;
+    let inboxUrl = options.payload.host + '/workflow/space/' + spaceId + '/inbox/' + options.payload.instance;
+
+    let outboxUrl = options.payload.host + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    let text = "请审批 " + '<a href=' + instanceUrl + '>' + options.text + '</a>';
+    let text = '【流程审批】\n请审批 ' + '<a href=' + inboxUrl + '>' + options.text + '</a>';
     
     if(instance.state == "completed")
-        text = options.text
+        text = '【流程审批】\n<a href=' + outboxUrl + '>' + options.text + '</a>';
     
     return text;
 }

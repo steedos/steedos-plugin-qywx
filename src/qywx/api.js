@@ -11,7 +11,7 @@ let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
 const auth = require("@steedos/auth");
 const steedosConfig = objectql.getSteedosConfig();
-let notifi = require('./notifications');
+let push = require('./notifications');
 
 // import { Mongo } from 'meteor/mongo';
 
@@ -98,11 +98,11 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
         });
         res.write('<head><meta charset="utf-8"/></head>');
         res.write('<h1>提示 Tips</h1>');
-        res.write('<h2>正在同步企业微信用户数据...</h2>');
+        res.write('<h2>请联系管理员配置企业微信工作区ID和用户ID...</h2>');
         return res.end('');
     }
     if (userId && authToken) {
-        if (user.user !== userId) {
+        if (user.user != userId) {
             console.log("user.user !== userId");
             Qiyeweixin.clearAuthCookies(req, res);
             hashedToken = Accounts._hashLoginToken(authToken);
