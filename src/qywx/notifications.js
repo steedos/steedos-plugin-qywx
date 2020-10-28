@@ -1,12 +1,12 @@
 let Qiyeweixin = require("./qywx")
+// 网页授权url
+let oauthUrl = Meteor.absoluteUrl('/api/qiyeweixin/mainpage?target=');
 
 Meteor.startup(function(){
     Push.oldSend = Push.send;
     Push.send = function(options){
         Push.oldSend(options);
         try {
-            let ref;
-            console.log("options.from------------: ",options);
             if (options.from !== 'workflow')
                 return;
             
@@ -38,7 +38,7 @@ Meteor.startup(function(){
             if (payload.instance){
                 text = workflowPush(options,spaceId);
             }else{
-                url = payload.host + payload.url;
+                url = oauthUrl + payload.url;
             }
             
             if (payload.related_to){
@@ -79,9 +79,8 @@ Meteor.startup(function(){
                 "enable_duplicate_check": 0,
                 "duplicate_check_interval": 1
             }
-
+            // 发送推送消息
             Qiyeweixin.sendMessage(msg,service.access_token);
-            console.log("-----options------",options);
         } catch (error) {
             console.error("Push error reason: ",error);
         }
@@ -97,16 +96,20 @@ let workflowPush = function(options,spaceId){
     let instanceId = options.payload.instance;
     let instance = Creator.getCollection('instances').findOne({_id:instanceId});
     
-    let inboxUrl = options.payload.host + '/workflow/space/' + spaceId + '/inbox/' + options.payload.instance;
+    let inboxUrl =  oauthUrl + '/workflow/space/' + spaceId + '/inbox/' + options.payload.instance;
 
-    let outboxUrl = options.payload.host + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
+    let outboxUrl = oauthUrl + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    let text = '【流程审批】\n请审批 ' + '<a href=' + inboxUrl + '>' + options.text + '</a>';
+    let text = '【流程审批】\n请审批 ' + '<a href=\"' + inboxUrl + '\">' + options.text + '</a>';
     
-    if(instance.state == "completed")
-        text = '【流程审批】\n<a href=' + outboxUrl + '>' + options.text + '</a>';
-    
-    return text;
+    if (!instance){
+        return text = '【流程审批】\n' + options.text;
+    }else{
+        if (instance.state == "completed")
+            text = '【流程审批】\n<a href=\"' + outboxUrl + '\">' + options.text + '</a>';
+        
+        return text;
+    }
 }
 
 // 知识推送
@@ -114,7 +117,7 @@ let cms_postsPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【知识】\n" + '<a href=' + url + '>' + options.text + '</a>';
+    let text = "【知识通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
         return text;    
 }
 
@@ -122,7 +125,7 @@ let cms_postsPush = function(options,url){
 let announcementsPush = function(options,url){
     if (!options || (options == {}))
         return false;
-    let text = "【公告通知】\n" + '<a href=' + url + '>' + options.text + '</a>';
+    let text = "【公告通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
     return text;
 }
 
@@ -131,7 +134,7 @@ let tasksPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【任务通知】\n" + '<a href=' + url + '>' + options.text + '</a>';
+    let text = "【任务通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
         return text;
 }
 
@@ -140,6 +143,6 @@ let eventsPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【日程通知】\n" + '<a href=' + url + '>' + options.text + '</a>';
+    let text = "【日程通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
         return text;
 }

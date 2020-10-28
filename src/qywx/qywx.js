@@ -208,7 +208,7 @@ exports.getUserInfo3rd = function (code) {
         });
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
         getUserInfo3rdUrl = qyapi + "?access_token=" + o.suite_access_token + "&code=" + code;
-        console.log("getUserInfo3rdUrl: ",getUserInfo3rdUrl);
+        // console.log("getUserInfo3rdUrl: ",getUserInfo3rdUrl);
         response = HTTP.get(getUserInfo3rdUrl);
         if (response.error_code) {
             throw response.msg;

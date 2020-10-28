@@ -6,28 +6,15 @@ const JSDOM = jsdom.JSDOM;
 let router = express.Router();
 let parser = require('xml2json');
 let Qiyeweixin = require('./qywx');
-let _sync = require('./sync');
 let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
 const auth = require("@steedos/auth");
 const steedosConfig = objectql.getSteedosConfig();
 let push = require('./notifications');
 
-// import { Mongo } from 'meteor/mongo';
-
 let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
 });
-ServiceConfiguration.configurations.update(config._id, {
-    $set: {
-        "suite_id": "wwdf2bbe3817d8a40a",
-        "suite_secret": "sfPGwVbVzht-_dLvf85gzHua2YGp0HVD3NkeSsDafKw"
-    },
-    $currentDate: {
-        "modified": true
-    }
-});
-
 
 if (config) {
     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
@@ -42,17 +29,22 @@ router.use("/qywx", async function (req, res, next) {
 // 工作台首页
 router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
     let appid, authorize_uri, o, redirect_uri, url, _ref5, _ref6, _ref7;
+    let target = "";
     o = ServiceConfiguration.configurations.findOne({
         service: "qiyeweixin"
     });
     let signature = Qiyeweixin.getSignature();
-    console.log("-------------signature----------：",signature);
+
+    // 推送消息重定向url
+    if (req.query.target)
+        target = req.query.target;
+    
     if (o) {
         redirect_uri = encodeURIComponent(Meteor.absoluteUrl('api/qiyeweixin/auth_login'));
-        console.log("redirect_uri----: ",redirect_uri);
+        // console.log("redirect_uri----: ",redirect_uri);
         authorize_uri = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.authorize_uri : void 0 : void 0;
         appid = o != null ? (_ref7 = o.secret) != null ? _ref7.corpid : void 0 : void 0;
-        url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + '&response_type=code&scope=snsapi_base#wechat_redirect';
+        url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + `&response_type=code&scope=snsapi_base&state=${target}#wechat_redirect`;
         res.writeHead(302, {
             'Location': url
         });
@@ -62,10 +54,16 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
 
 // 网页授权登录
 router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
-    let authToken, cookies, hashedToken, user, userId, userInfo, _ref5, space, spaceId;
+    let authToken, cookies, hashedToken, user, userId, userInfo, state, redirect_url, _ref5, space, spaceId;
     cookies = new Cookies(req, res);
+    
     userId = cookies.get("X-User-Id");
     authToken = cookies.get("X-Auth-Token");
+    state = req.query.state;
+    // 推送消息重定向url
+    if (state != "")
+        redirect_url = Meteor.absoluteUrl(state);
+
     if (req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) {
         userInfo = Qiyeweixin.getUserInfo3rd(req.query.code);
     } else {
@@ -77,7 +75,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
         res.write('<h2>未从企业微信获取到网页授权码</h2>');
         return res.end('');
     }
-    console.log("--------userInfo: ",userInfo);
+
     user = Creator.getCollection("space_users").findOne({
         'qywx_id': userInfo != null ? userInfo.UserId : void 0
     });
@@ -86,13 +84,10 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     });
     
     // 默认工作区
-    if (space){
+    if (space)
         spaceId = space._id;
-    }else{
-        spaceId = "";
-    }
 
-    if (!user) {
+    if (!user || !space) {
         res.writeHead(200, {
             'Content-Type': 'text/html'
         });
@@ -108,7 +103,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
             hashedToken = Accounts._hashLoginToken(authToken);
             Accounts.destroyToken(userId, hashedToken);
         } else {
-            res.redirect(302, '/');
+            res.redirect(302, redirect_url || '/');
             return res.end('');
         }
     }
@@ -118,7 +113,7 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     await auth.insertHashedLoginToken(user.user, hashedToken);
     auth.setAuthCookies(req, res, user.user, authtToken, spaceId);
     res.setHeader('X-Space-Token', spaceId + ',' + authtToken);
-    res.redirect(302, '/');
+    res.redirect(302, redirect_url || '/');
     return res.end('');
 });
 
@@ -192,7 +187,6 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
     msg_signature = req.query.msg_signature;
     timestamp = req.query.timestamp;
     nonce = req.query.nonce;
-    console.log("nonce-----: ",nonce);
     req.setEncoding('utf8');
     req.on("data", function (postDataChunk) {
         return postData += postDataChunk;
@@ -206,10 +200,8 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
         json = parser.toJson(result.message);
         json = JSON.parse(json);
         message = json.xml || {};
-        console.log("message----------: ",message);
         if (!message.InfoType){
             if (message.Event == "enter_agent"){
-                console.log("enter_agent-----");
                 res.writeHead(200, {
                     "Content-Type": "text/plain"
                 });
@@ -220,30 +212,25 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
             switch (message != null ? message.InfoType : void 0) {
                 case 'suite_ticket':
                     SuiteTicket(message);
-                    console.log("suite_ticket-----");
                     res.writeHead(200, {
                         "Content-Type": "text/plain"
                     });
                     return res.end("success");
                 case 'create_auth':
-                    console.log("create_auth-----");
                     res.writeHead(200, {
                         "Content-Type": "text/plain"
                     });
                     res.end("success");
                     return CreateAuth(message);
                 case 'cancel_auth':
-                    console.log("cancel_auth-----");
                     res.writeHead(200, {
                         "Content-Type": "text/plain"
                     });
                     res.end(result != null ? result.message : void 0);
                     return CancelAuth(message);
                 case 'change_auth':
-                    console.log("change_auth-----");
                     return ChangeContact(message.AuthCorpId);
                 case 'change_contact':
-                    console.log("change_contact-----");
                     return ChangeContact(message.AuthCorpId);
                 
             }
