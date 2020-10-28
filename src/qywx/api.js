@@ -299,18 +299,29 @@ let CancelAuth = function (message) {
         'qywx_corp_id': corp_id
     });
     if (space) {
-        s_qywx = space.services.qiyeweixin;
-        s_qywx.permanent_code = void 0;
-        // s_qywx.need_sync = false;
-        return Creator.getCollection("spaces").direct.update({
-            _id: space._id
-        }, {
-            $set: {
-                qywx_need_sync: false,
-                is_deleted: true,
-                'services.qiyeweixin': s_qywx
-            }
-        });
+        try {
+            if (!space.services)
+                return;
+        
+            if (!space.services.qiyeweixin)
+                return;
+            
+            s_qywx = space.services.qiyeweixin;
+            s_qywx.permanent_code = void 0;
+            // s_qywx.need_sync = false;
+            return Creator.getCollection("spaces").direct.update({
+                _id: space._id
+            }, {
+                $set: {
+                    qywx_need_sync: false,
+                    is_deleted: true,
+                    'services.qiyeweixin': s_qywx
+                }
+            });
+        } catch (error) {
+            console.error("CancelAuth Error: ",error);
+            return;
+        }
     }
 };
 
