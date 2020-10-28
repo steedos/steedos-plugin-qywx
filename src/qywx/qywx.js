@@ -60,7 +60,6 @@ exports.getProviderToken = function (corpid, provider_secret) {
 
 // 获取suite_access_token:OK
 exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
-    console.log("getSuiteAccessToken-----");
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getSuiteAccessToken : void 0 : void 0;
@@ -69,14 +68,12 @@ exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
             suite_secret: suite_secret,
             suite_ticket: suite_ticket
         };
-        console.log("data---------: ",data);
         response = HTTP.post(qyapi, {
             data: data,
             headers: {
                 "Content-Type": "application/json"
             }
         });
-        console.log("response.statusCode----: ",response.statusCode);
         if (response.statusCode !== 200) {
             throw response;
         }

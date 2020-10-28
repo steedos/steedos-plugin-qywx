@@ -133,21 +133,20 @@ router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
                 'qywx_id': loginInfo.user_info.userid
             });
             if (user) {
-                authToken = Accounts._generateStampedLoginToken();
-                hashedToken = Accounts._hashStampedToken(authToken);
-                Accounts._insertHashedLoginToken(user._id, hashedToken);
-                Qiyeweixin.setAuthCookies(req, res, user._id, authToken.token);
-                res.writeHead(302, {
-                    'Location': '/'
-                });
-                return res.end('success');
+                let stampedAuthToken = auth.generateStampedLoginToken();
+                authtToken = stampedAuthToken.token;
+                hashedToken = auth.hashStampedToken(stampedAuthToken);
+                await auth.insertHashedLoginToken(user.user, hashedToken);
+                auth.setAuthCookies(req, res, user.user, authtToken);
+                res.redirect(302, '/');
+                return res.end('');
             } else {
                 res.writeHead(200, {
                     'Content-Type': 'text/html'
                 });
                 res.write('<head><meta charset="utf-8"/></head>');
                 res.write('<h1>提示 Tips</h1>');
-                res.write('<h2>正在同步企业微信用户数据...</h2>');
+                res.write('<h2>请联系管理员配置企业微信工作区ID和用户ID...</h2>');
                 return res.end('');
             }
         } else {
@@ -357,19 +356,21 @@ let initSpace = function (service, name) {
                 'services.qiyeweixin': service
             }
         });
-    } else {
-        doc = {};
-        doc.qywx_corp_id = service.corp_id;
-        doc.name = name;
-        doc.is_deleted = false;
-        doc.created = new Date;
-        doc.qywx_need_sync = true;
-        service.remote_modified = new Date;
-        doc.services = {
-            qiyeweixin: service
-        };
-        newSpace = Creator.getCollection("spaces").direct.insert(doc);
     }
+    return;
+    // else {
+    //     doc = {};
+    //     doc.qywx_corp_id = service.corp_id;
+    //     doc.name = name;
+    //     doc.is_deleted = false;
+    //     doc.created = new Date;
+    //     doc.qywx_need_sync = true;
+    //     service.remote_modified = new Date;
+    //     doc.services = {
+    //         qiyeweixin: service
+    //     };
+    //     newSpace = Creator.getCollection("spaces").direct.insert(doc);
+    // }
     // newSpace = Creator.getCollection("spaces").findOne({
     //     "qywx_corp_id": service.corp_id
     // });
