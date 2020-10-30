@@ -8,3 +8,7 @@ fields:
     label: 企业微信工作区
     type: text
     hidden: true
+permission_set:
+  user:
+    uneditable_fields:
+      - qywx_id

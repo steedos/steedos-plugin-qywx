@@ -14,21 +14,21 @@ email:
   url: xxx
 qywx:
   sync_interval: 60000
-  authorize_uri: https://open.weixin.qq.com/connect/oauth2/authorize
+  authorize_uri: ${AUTHORIZE_URI}
   workflow_url: ${ROOT_URL}
   api:
-    getLoginInfo: https://qyapi.weixin.qq.com/cgi-bin/service/get_login_info
-    getProviderToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_provider_token
-    getSuiteAccessToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token
-    getPreAuthCode: https://qyapi.weixin.qq.com/cgi-bin/service/get_pre_auth_code
-    getPermanentCode: https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code
-    getCorpToken: https://qyapi.weixin.qq.com/cgi-bin/service/get_corp_token
-    getDepartmentList: https://qyapi.weixin.qq.com/cgi-bin/department/list
-    getUserList: https://qyapi.weixin.qq.com/cgi-bin/user/list
-    getAllUserList: https://qyapi.weixin.qq.com/cgi-bin/user/list
-    getAdminList: https://qyapi.weixin.qq.com/cgi-bin/service/get_admin_list
-    getUserInfo3rd: https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd
-    sendMessage: https://qyapi.weixin.qq.com/cgi-bin/message/send
+    getLoginInfo: ${GETLOGININFO}
+    getProviderToken: ${GETPROVIDERTOKEN}
+    getSuiteAccessToken: ${GETSUITEACCESSTOKEN}
+    getPreAuthCode: ${GETPREAUTHCODE}
+    getPermanentCode: ${GETPERMANENTCODE}
+    getCorpToken: ${GETCORPTOKEN}
+    getDepartmentList: ${GETDEPARTMENTLIST}
+    getUserList: ${GETUSERLIST}
+    getAllUserList: ${GETALLUSERLIST}
+    getAdminList: ${GETADMINLIST}
+    getUserInfo3rd: ${GETUSERINFO3RD}
+    sendMessage: ${SENDMESSAGE}
 tenant:
   name: 华炎魔方
   enable_register: true
