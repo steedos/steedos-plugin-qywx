@@ -9,12 +9,12 @@ server.Fiber(function () {
     try {
         server.Profile.run("Server startup", function () {
             server.loadServerBundles();
+            var init = require('./lib/index').init;
+            init({ app: app });
             WebApp.connectHandlers.use(app);
-            const router = require('./src/qywx/api');
             steedos.init();
             server.callStartupHooks();
             server.runMain();
-            app.use('', router.router);
         })
     } catch (error) {
        console.error(error.stack)

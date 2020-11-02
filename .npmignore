@@ -1,3 +1,5 @@
 !.gitignore
 **/yarn.lock
 **/package-lock.json
+**/env.local
+**/*.txt
