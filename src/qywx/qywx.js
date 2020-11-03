@@ -10,6 +10,9 @@ exports.getLoginInfo = function (access_token, auth_code) {
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getLoginInfo : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             auth_code: auth_code
         };
@@ -36,6 +39,9 @@ exports.getProviderToken = function (corpid, provider_secret) {
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getProviderToken : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             corpid: corpid,
             provider_secret: provider_secret
@@ -63,6 +69,9 @@ exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getSuiteAccessToken : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             suite_id: suite_id,
             suite_secret: suite_secret,
@@ -91,6 +100,9 @@ exports.getPreAuthCode = function (suite_id, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPreAuthCode : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             suite_id: suite_id
         };
@@ -117,6 +129,9 @@ exports.getPermanentCode = function (suite_id, auth_code, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPermanentCode : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             suite_id: suite_id,
             auth_code: auth_code
@@ -144,6 +159,9 @@ exports.getCorpToken = function (auth_corpid, permanent_code, suite_access_token
     var data, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getCorpToken : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             auth_corpid: auth_corpid,
             permanent_code: permanent_code
@@ -174,6 +192,9 @@ exports.getAdminList = function (auth_corpid, agentid) {
             service: "qiyeweixin"
         });
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAdminList : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         data = {
             auth_corpid: auth_corpid,
             agentid: agentid
@@ -204,6 +225,9 @@ exports.getUserInfo3rd = function (code) {
             service: "qiyeweixin"
         });
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         getUserInfo3rdUrl = qyapi + "?access_token=" + o.suite_access_token + "&code=" + code;
         // console.log("getUserInfo3rdUrl: ",getUserInfo3rdUrl);
         response = HTTP.get(getUserInfo3rdUrl);
@@ -227,6 +251,9 @@ exports.getUserList = function (access_token, department_id) {
     var getUserListUrl, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserList : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         getUserListUrl = qyapi + "?access_token=" + access_token + "&department_id=" + department_id + "&fetch_child=0";
         response = HTTP.get(getUserListUrl);
         if (response.error_code) {
@@ -250,6 +277,9 @@ exports.getAllUserList = function (access_token) {
     var getAllUserListUrl, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAllUserList : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         getAllUserListUrl = qyapi + "?access_token=" + access_token + "&department_id=1&fetch_child=1";
         response = HTTP.get(getAllUserListUrl);
         if (response.error_code) {
@@ -274,6 +304,9 @@ exports.getDepartmentList = function (access_token) {
     var getDepartmentListUrl, qyapi, response, _ref, _ref2;
     try {
         qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getDepartmentList : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
         getDepartmentListUrl = qyapi + "?access_token=" + access_token;
         response = HTTP.get(getDepartmentListUrl);
         if (response.error_code) {
@@ -340,7 +373,9 @@ exports.clearAuthCookies = function(req, res) {
 exports.sendMessage = function(data,access_token){
     try {
         let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.api.sendMessage : void 0 : void 0;
-        console.log("url-------- ",url);
+        if (!url)
+            return;
+        
         let response = HTTP.post(url + "?access_token=" + access_token, {
             data: data,
             headers: {

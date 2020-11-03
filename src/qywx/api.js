@@ -43,6 +43,10 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
         redirect_uri = encodeURIComponent(Meteor.absoluteUrl('api/qiyeweixin/auth_login'));
         // console.log("redirect_uri----: ",redirect_uri);
         authorize_uri = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.authorize_uri : void 0 : void 0;
+        
+        if (!authorize_uri)
+            return;
+        
         appid = o != null ? (_ref7 = o.secret) != null ? _ref7.corpid : void 0 : void 0;
         url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + `&response_type=code&scope=snsapi_base&state=${target}#wechat_redirect`;
         res.writeHead(302, {
@@ -360,6 +364,7 @@ let ChangeContact = function (corp_id) {
             }
         });
     }
+    return;
 };
 
 // 取消授权，更新space表=============OK
@@ -394,6 +399,7 @@ let CancelAuth = function (message) {
             return;
         }
     }
+    return;
 };
 
 // 根据推送过来的临时授权码，获取永久授权码
