@@ -100,7 +100,7 @@ let workflowPush = function(options,spaceId){
 
     let outboxUrl = oauthUrl + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    let text = '【流程审批】\n请审批 ' + '<a href=\"' + inboxUrl + '\">' + options.text + '</a>';
+    let text = '【流程审批】\n请审批 ' + options.title + '  <a href=\"' + inboxUrl + '\">' + options.text + '</a>';
     
     if (!instance){
         return text = '【流程审批】\n' + options.text;
@@ -117,7 +117,7 @@ let cms_postsPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【知识通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
+    let text = "【知识通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
         return text;    
 }
 
@@ -125,7 +125,7 @@ let cms_postsPush = function(options,url){
 let announcementsPush = function(options,url){
     if (!options || (options == {}))
         return false;
-    let text = "【公告通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
+    let text = "【公告通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
     return text;
 }
 
@@ -134,7 +134,7 @@ let tasksPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【任务通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
+    let text = "【任务通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
         return text;
 }
 
@@ -143,6 +143,6 @@ let eventsPush = function(options,url){
     if (!options || (options == {}))
         return false;
     
-    let text = "【日程通知】\n" + '<a href=\"' + url + '\">' + options.text + '</a>';
+    let text = "【日程通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
         return text;
 }
