@@ -42,21 +42,7 @@ Meteor.startup(function(){
             }
             
             if (payload.related_to){
-                // 知识推送
-                if (payload.related_to.o == "cms_posts")
-                    text = cms_postsPush(options,url);
-                
-                // 公告推送
-                if (payload.related_to.o == "announcements")
-                    text = announcementsPush(options,url);
-                
-                // 任务推送
-                if (payload.related_to.o == "tasks")
-                    text = tasksPush(options,url);
-                
-                // 日程推送
-                if (payload.related_to.o == "events")
-                    text = eventsPush(options,url);
+                text = '【华炎魔方】\n' + options.title + '  <a href=\"' + url + '\">' + options.text + '</a>';
             }
             
             let o = ServiceConfiguration.configurations.findOne({
@@ -100,49 +86,14 @@ let workflowPush = function(options,spaceId){
 
     let outboxUrl = oauthUrl + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    let text = '【流程审批】\n请审批 ' + options.title + '  <a href=\"' + inboxUrl + '\">' + options.text + '</a>';
+    let text = '【审批王】\n请审批 ' + options.title + '  <a href=\"' + inboxUrl + '\">' + options.text + '</a>';
     
     if (!instance){
-        return text = '【流程审批】\n' + options.text;
+        return text = '【审批王】\n' + options.text;
     }else{
         if (instance.state == "completed")
-            text = '【流程审批】\n<a href=\"' + outboxUrl + '\">' + options.text + '</a>';
+            text = '【审批王】\n<a href=\"' + outboxUrl + '\">' + options.text + '</a>';
         
         return text;
     }
-}
-
-// 知识推送
-let cms_postsPush = function(options,url){
-    if (!options || (options == {}))
-        return false;
-    
-    let text = "【知识通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
-        return text;    
-}
-
-// 公告推送
-let announcementsPush = function(options,url){
-    if (!options || (options == {}))
-        return false;
-    let text = "【公告通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
-    return text;
-}
-
-// 任务推送
-let tasksPush = function(options,url){
-    if (!options || (options == {}))
-        return false;
-    
-    let text = "【任务通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
-        return text;
-}
-
-// 日程推送
-let eventsPush = function(options,url){
-    if (!options || (options == {}))
-        return false;
-    
-    let text = "【日程通知】\n" + options.title +'  <a href=\"' + url + '\">' + options.text + '</a>';
-        return text;
 }
