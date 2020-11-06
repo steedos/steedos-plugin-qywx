@@ -7,6 +7,7 @@ Meteor.startup(function(){
     Push.send = function(options){
         Push.oldSend(options);
         try {
+            // console.log("options:---",options);
             if (options.from !== 'workflow')
                 return;
             
@@ -33,16 +34,20 @@ Meteor.startup(function(){
             let payload = options.payload;
             let url = "";
             let text = "";
+            let title = "";
             
             // 审批流程
             if (payload.instance){
-                text = workflowPush(options,spaceId);
+                title = "审批王";
+                text = workflowPush(options,spaceId).text;
+                url = workflowPush(options,spaceId).url;
             }else{
+                title = "华炎魔方";
                 url = oauthUrl + payload.url;
             }
             
             if (payload.related_to){
-                text = '【华炎魔方】\n' + options.title + '  <a href=\"' + url + '\">' + options.text + '</a>';
+                text = options.title + '  ' + options.text;
             }
             
             let o = ServiceConfiguration.configurations.findOne({
@@ -55,10 +60,13 @@ Meteor.startup(function(){
 
             let msg = {
                 "touser" : qywx_userId,
-                "msgtype" : "text",
+                "msgtype" : "textcard",
                 "agentid" : agentId,
-                "text" : {
-                    "content" : text
+                "textcard" : {
+                    "title" : title,
+                    "description" : text,
+                    "url" : url,
+                    "btntxt": "详情"
                 },
                 "safe":0,
                 "enable_id_trans": 0,
@@ -78,6 +86,9 @@ let workflowPush = function(options,spaceId){
     if (!options || (options == {}))
         return false;
     
+    let info = {};
+    info.text = "";
+    info.url = "";
     // 获取申请单
     let instanceId = options.payload.instance;
     let instance = Creator.getCollection('instances').findOne({_id:instanceId});
@@ -86,14 +97,16 @@ let workflowPush = function(options,spaceId){
 
     let outboxUrl = oauthUrl + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    let text = '【审批王】\n请审批 ' + options.title + '  <a href=\"' + inboxUrl + '\">' + options.text + '</a>';
+    info.text = '请审批 ' + options.title + ' ' + options.text;
+    info.url = inboxUrl
     
     if (!instance){
-        return text = '【审批王】\n' + options.text;
+        info.text = options.text;
     }else{
-        if (instance.state == "completed")
-            text = '【审批王】\n<a href=\"' + outboxUrl + '\">' + options.text + '</a>';
-        
-        return text;
+        if (instance.state == "completed"){
+            info.text = options.text;
+            info.url = outboxUrl;
+        }
     }
+    return info;
 }

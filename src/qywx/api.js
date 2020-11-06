@@ -319,6 +319,8 @@ router.post("/api/qiyeweixin/push", async function (req, res, next) {
     let agentId = req.body.agentid;
     let spaceId = req.body.spaceId;
     let text = req.body.text;
+    let url = req.body.url;
+    let title = req.body.title;
     let space = Creator.getCollection('spaces').findOne({_id: spaceId});
     let service = space.services.qiyeweixin;
     let o = ServiceConfiguration.configurations.findOne({
@@ -330,10 +332,13 @@ router.post("/api/qiyeweixin/push", async function (req, res, next) {
     }
     let msg = {
         "touser" : qywx_userId,
-        "msgtype" : "text",
+        "msgtype" : "textcard",
         "agentid" : agentId,
-        "text" : {
-            "content" : text
+        "textcard" : {
+            "title" : title,
+            "description" : text,
+            "url" : url,
+            "btntxt":"详情"
         },
         "safe":0,
         "enable_id_trans": 0,
