@@ -19,6 +19,9 @@ Meteor.startup(function(){
             if (!space)
                 return;
             
+            if (!space.services)
+                return;
+
             if (!space.services.qiyeweixin)
                 return;
             
@@ -34,20 +37,20 @@ Meteor.startup(function(){
             let payload = options.payload;
             let url = "";
             let text = "";
-            let title = "";
+            let title = "华炎魔方";
             
             // 审批流程
             if (payload.instance){
-                title = "审批王";
-                text = workflowPush(options,spaceId).text;
+                title = workflowPush(options,spaceId).text;
+                text = workflowPush(options,spaceId).title;
                 url = workflowPush(options,spaceId).url;
             }else{
-                title = "华炎魔方";
+                title = options.title;
                 url = oauthUrl + payload.url;
             }
             
             if (payload.related_to){
-                text = options.title + '  ' + options.text;
+                text = options.text;
             }
             
             let o = ServiceConfiguration.configurations.findOne({
@@ -89,6 +92,7 @@ let workflowPush = function(options,spaceId){
     let info = {};
     info.text = "";
     info.url = "";
+    info.title = "审批王";
     // 获取申请单
     let instanceId = options.payload.instance;
     let instance = Creator.getCollection('instances').findOne({_id:instanceId});
@@ -97,8 +101,9 @@ let workflowPush = function(options,spaceId){
 
     let outboxUrl = oauthUrl + '/workflow/space/' + spaceId + '/outbox/' + options.payload.instance;
     
-    info.text = '请审批 ' + options.title + ' ' + options.text;
-    info.url = inboxUrl
+    info.text = '请审批 ' + options.text;
+    info.url = inboxUrl;
+    info.title = options.title;
     
     if (!instance){
         info.text = options.text;
