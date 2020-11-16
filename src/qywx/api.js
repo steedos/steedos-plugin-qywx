@@ -16,6 +16,21 @@ let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
 });
 
+let qy_suite_id = steedosConfig.qywx.suite_id;
+let qy_suite_secret = steedosConfig.qywx.suite_secret;
+
+if (qy_suite_id && qy_suite_secret){
+    ServiceConfiguration.configurations.update(config._id, {
+        $set: {
+            "suite_id": qy_suite_id,
+            "suite_secret": qy_suite_secret
+        },
+        $currentDate: {
+            "modified": true
+        }
+    });
+}
+
 if (config) {
     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
 }
