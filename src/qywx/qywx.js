@@ -2,6 +2,7 @@ let objectql = require('@steedos/objectql');
 const steedosConfig = objectql.getSteedosConfig();
 const Cookies = require("cookies");
 let Hashes = require("jshashes");
+let qywx_api = require('./router.js');
 let SHA1 = new Hashes.SHA1;
 
 // 获取登录信息
@@ -9,7 +10,7 @@ exports.getLoginInfo = function (access_token, auth_code) {
     console.log('getLoginInfo access_token: ',access_token);
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getLoginInfo : void 0 : void 0;
+        qyapi = qywx_api.getLoginInfo;
         if (!qyapi)
             return;
         
@@ -38,7 +39,7 @@ exports.getLoginInfo = function (access_token, auth_code) {
 exports.getProviderToken = function (corpid, provider_secret) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getProviderToken : void 0 : void 0;
+        qyapi = qywx_api.getProviderToken;
         if (!qyapi)
             return;
         
@@ -68,7 +69,7 @@ exports.getProviderToken = function (corpid, provider_secret) {
 exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getSuiteAccessToken : void 0 : void 0;
+        qyapi = qywx_api.getSuiteAccessToken;
         if (!qyapi)
             return;
         
@@ -99,7 +100,7 @@ exports.getSuiteAccessToken = function (suite_id, suite_secret, suite_ticket) {
 exports.getPreAuthCode = function (suite_id, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPreAuthCode : void 0 : void 0;
+        qyapi = qywx_api.getPreAuthCode;
         if (!qyapi)
             return;
         
@@ -128,7 +129,7 @@ exports.getPreAuthCode = function (suite_id, suite_access_token) {
 exports.getPermanentCode = function (suite_id, auth_code, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getPermanentCode : void 0 : void 0;
+        qyapi = qywx_api.getPermanentCode;
         if (!qyapi)
             return;
         
@@ -158,7 +159,7 @@ exports.getPermanentCode = function (suite_id, auth_code, suite_access_token) {
 exports.getCorpToken = function (auth_corpid, permanent_code, suite_access_token) {
     var data, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getCorpToken : void 0 : void 0;
+        qyapi = qywx_api.getCorpToken;
         if (!qyapi)
             return;
         
@@ -191,7 +192,7 @@ exports.getAdminList = function (auth_corpid, agentid) {
         o = ServiceConfiguration.configurations.findOne({
             service: "qiyeweixin"
         });
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAdminList : void 0 : void 0;
+        qyapi = qywx_api.getAdminList;
         if (!qyapi)
             return;
         
@@ -224,7 +225,7 @@ exports.getUserInfo3rd = function (code) {
         o = ServiceConfiguration.configurations.findOne({
             service: "qiyeweixin"
         });
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo3rd : void 0 : void 0;
+        qyapi = qywx_api.getUserInfo3rd;
         if (!qyapi)
             return;
         
@@ -250,7 +251,7 @@ exports.getUserInfo3rd = function (code) {
 exports.getUserList = function (access_token, department_id) {
     var getUserListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserList : void 0 : void 0;
+        qyapi = qywx_api.getUserList;
         if (!qyapi)
             return;
         
@@ -276,7 +277,7 @@ exports.getUserList = function (access_token, department_id) {
 exports.getAllUserList = function (access_token) {
     var getAllUserListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getAllUserList : void 0 : void 0;
+        qyapi = qywx_api.getAllUserList;
         if (!qyapi)
             return;
         
@@ -303,7 +304,7 @@ exports.getDepartmentList = function (access_token) {
     console.log("access_token: ",access_token);
     var getDepartmentListUrl, qyapi, response, _ref, _ref2;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getDepartmentList : void 0 : void 0;
+        qyapi = qywx_api.getDepartmentList;
         if (!qyapi)
             return;
         
@@ -372,7 +373,7 @@ exports.clearAuthCookies = function(req, res) {
 // 发送消息
 exports.sendMessage = function(data,access_token){
     try {
-        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.api.sendMessage : void 0 : void 0;
+        let url = qywx_api.sendMessage;
         if (!url)
             return;
         
@@ -397,7 +398,7 @@ exports.sendMessage = function(data,access_token){
 // 企业内部获取access_token
 exports.getToken = function(corpid,secret){
     try {
-        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.api.getToken : void 0 : void 0;
+        let url = qywx_api.getToken;
         if (!url)
             return;
         
@@ -442,7 +443,7 @@ exports.getSpace = function(){
 exports.getUserInfo = function (access_token, code) {
     var getUserInfoUrl, qyapi, response, _ref, _ref2, _ref3;
     try {
-        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo : void 0 : void 0;
+        qyapi = qywx_api.getUserInfo;
         if (!qyapi)
             return;
         

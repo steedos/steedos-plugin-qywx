@@ -10,26 +10,12 @@ let WXBizMsgCrypt = require('wechat-crypto');
 let objectql = require('@steedos/objectql');
 const auth = require("@steedos/auth");
 const steedosConfig = objectql.getSteedosConfig();
+let qywx_api = require('./router.js');
 let push = require('./notifications');
 
 let config = ServiceConfiguration.configurations.findOne({
     service: "qiyeweixin"
 });
-
-let qy_suite_id = steedosConfig.qywx.suite_id;
-let qy_suite_secret = steedosConfig.qywx.suite_secret;
-
-if (qy_suite_id && qy_suite_secret){
-    ServiceConfiguration.configurations.update(config._id, {
-        $set: {
-            "suite_id": qy_suite_id,
-            "suite_secret": qy_suite_secret
-        },
-        $currentDate: {
-            "modified": true
-        }
-    });
-}
 
 if (config) {
     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
@@ -57,7 +43,7 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
     if (o) {
         redirect_uri = encodeURIComponent(Meteor.absoluteUrl('api/qiyeweixin/auth_login'));
         // console.log("redirect_uri----: ",redirect_uri);
-        authorize_uri = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.authorize_uri : void 0 : void 0;
+        authorize_uri = qywx_api.authorize_uri;
         
         if (!authorize_uri)
             return;
