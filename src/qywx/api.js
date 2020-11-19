@@ -43,11 +43,11 @@ router.use("/qywx", async function (req, res, next) {
 
 // 工作台首页
 router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
-    let appid, authorize_uri, o, redirect_uri, url, _ref5, _ref6, _ref7;
+    let authorize_uri, o, redirect_uri, url, _ref5, _ref6, _ref7;
     let target = "";
-    o = ServiceConfiguration.configurations.findOne({
-        service: "qiyeweixin"
-    });
+    let appid = "";
+    o = Qiyeweixin.getSpace();
+    
     let signature = Qiyeweixin.getSignature();
 
     // 推送消息重定向url
@@ -61,8 +61,9 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
         
         if (!authorize_uri)
             return;
+        if (o.qywx_corp_id)
+            appid = o.qywx_corp_id;
         
-        appid = o != null ? (_ref7 = o.secret) != null ? _ref7.corpid : void 0 : void 0;
         url = authorize_uri + '?appid=' + appid + '&redirect_uri=' + redirect_uri + `&response_type=code&scope=snsapi_base&state=${target}#wechat_redirect`;
         res.writeHead(302, {
             'Location': url
@@ -73,34 +74,73 @@ router.get("/api/qiyeweixin/mainpage", async function (req, res, next) {
 
 // 网页授权登录
 router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
-    let authToken, cookies, hashedToken, user, userId, userInfo, state, redirect_url, _ref5, space, spaceId;
+    let authToken, cookies, hashedToken, user, userId, userInfo, state, redirect_url, _ref5, space, spaceId, token;
     cookies = new Cookies(req, res);
     
     userId = cookies.get("X-User-Id");
     authToken = cookies.get("X-Auth-Token");
     state = req.query.state;
+    space = Qiyeweixin.getSpace();
+    // 获取access_token
+    if(space.qywx_corp_id && space.qywx_secret)
+        token = Qiyeweixin.getToken(space.qywx_corp_id,space.qywx_secret)
+    
     // 推送消息重定向url
     if (state != "")
         redirect_url = Meteor.absoluteUrl(state);
 
-    if (req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) {
-        userInfo = Qiyeweixin.getUserInfo3rd(req.query.code);
+    // console.log("redirect_url: ",redirect_url);
+    if ((req != null ? (_ref5 = req.query) != null ? _ref5.code : void 0 : void 0) && token) {
+        userInfo = Qiyeweixin.getUserInfo(token, req.query.code);
     } else {
         res.writeHead(200, {
             'Content-Type': 'text/html'
         });
-        res.write('<head><meta charset="utf-8"/></head>');
-        res.write('<h1>提示 Tips</h1>');
-        res.write('<h2>未从企业微信获取到网页授权码</h2>');
+        res.write(
+            `<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes">
+                    <title>Steedos</title>
+                    <link rel="stylesheet" type="text/css" href="${getAbsoluteUrl("/assets/styles/steedos-tailwind.min.css")}">
+                    <script type="text/javascript" src="${getAbsoluteUrl("/lib/jquery/jquery-1.11.2.min.js")}"></script>
+                    <style>
+                    </style>
+                </head>
+                <body>
+                    <div class="rounded-md bg-yellow-50 p-6 m-6">
+                        <div class="flex">
+                        <div class="flex-shrink-0">
+                            <!-- Heroicon name: exclamation -->
+                            <svg class="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg leading-5 font-bold text-yellow-700">
+                            登录失败
+                            </h3>
+                            <div class="mt-2 text-base leading-5 text-yellow-600">
+                            <p>
+                            未获取企业授权码或access_token，请联系管理员配置工作区企业微信相关信息
+                            </p>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            `
+        );
         return res.end('');
     }
 
+    // console.log("userInfo: ",userInfo);
     user = Creator.getCollection("space_users").findOne({
         'qywx_id': userInfo != null ? userInfo.UserId : void 0
     });
-    space = Creator.getCollection("spaces").findOne({
-        'qywx_corp_id': userInfo != null ? userInfo.CorpId : void 0
-    });
+    
     
     // 默认工作区
     if (space)
@@ -154,7 +194,6 @@ router.get("/api/qiyeweixin/auth_login", async function (req, res, next) {
     }
     if (userId && authToken) {
         if (user.user != userId) {
-            console.log("user.user !== userId");
             Qiyeweixin.clearAuthCookies(req, res);
             hashedToken = Accounts._hashLoginToken(authToken);
             Accounts.destroyToken(userId, hashedToken);
@@ -289,6 +328,7 @@ router.post("/api/qiyeweixin/callback", async function (req, res, next) {
         json = parser.toJson(result.message);
         json = JSON.parse(json);
         message = json.xml || {};
+        console.log("message: ", message);
         if (!message.InfoType){
             if (message.Event == "enter_agent"){
                 res.writeHead(200, {

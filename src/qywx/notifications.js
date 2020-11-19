@@ -19,20 +19,18 @@ Meteor.startup(function(){
             if (!space)
                 return;
             
-            if (!space.services)
+            if (!space.qywx_corp_id || !space.qywx_agent_id || !space.qywx_secret)
                 return;
 
-            if (!space.services.qiyeweixin)
-                return;
-            
+            let access_token = Qiyeweixin.getToken(space.qywx_corp_id, space.qywx_secret);
+
             let space_user = Creator.getCollection('space_users').findOne({space:space._id, user:options.query.userId});
             if (!space_user.qywx_id)
                 return;
             
             console.log("Push.send");
             let qywx_userId = space_user.qywx_id;
-            let service = space.services.qiyeweixin;
-            let agentId = service.agentid;
+            let agentId = space.qywx_agent_id;
             let spaceId = space._id;
             let payload = options.payload;
             let url = "";
@@ -52,14 +50,6 @@ Meteor.startup(function(){
             if (payload.related_to){
                 text = options.text;
             }
-            
-            let o = ServiceConfiguration.configurations.findOne({
-                service: "qiyeweixin"
-            });
-            at = Qiyeweixin.getCorpToken(service.corp_id, service.permanent_code, o.suite_access_token);
-            if (at && at.access_token) {
-                service.access_token = at.access_token;
-            }
 
             let msg = {
                 "touser" : qywx_userId,
@@ -77,7 +67,7 @@ Meteor.startup(function(){
                 "duplicate_check_interval": 1
             }
             // 发送推送消息
-            Qiyeweixin.sendMessage(msg,service.access_token);
+            Qiyeweixin.sendMessage(msg, access_token);
         } catch (error) {
             console.error("Push error reason: ",error);
         }

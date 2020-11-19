@@ -217,7 +217,7 @@ exports.getAdminList = function (auth_corpid, agentid) {
     }
 };
 
-// 获取用户信息
+// 获取第三方用户信息
 exports.getUserInfo3rd = function (code) {
     var getUserInfo3rdUrl, o, qyapi, response, _ref, _ref2, _ref3;
     try {
@@ -393,3 +393,73 @@ exports.sendMessage = function(data,access_token){
         });
     }
 }
+
+// 企业内部获取access_token
+exports.getToken = function(corpid,secret){
+    try {
+        let url = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.qywx) != null ? _ref5.api.getToken : void 0 : void 0;
+        if (!url)
+            return;
+        
+        let response = HTTP.get(url + "?corpid=" + corpid + "&corpsecret=" + secret);
+        if (response.error_code) {
+            console.error(response.error_code);
+            throw response.msg;
+        }
+        if (response.data.errcode > 0) {
+            throw response.data.errmsg;
+        }
+        return response.data.access_token;
+    } catch (err) {
+        console.error(err);
+        throw _.extend(new Error("Failed to get token with error: " + err), {
+            response: err
+        });
+    }
+}
+
+// 企业内部获取工作区
+exports.getSpace = function(){
+    try {
+        let space;
+        let spaceId = typeof steedosConfig !== "undefined" && steedosConfig !== null ? (_ref5 = steedosConfig.tenant) != null ? _ref5._id : void 0 : void 0;
+        if (!spaceId){
+            space = Creator.getCollection('spaces').findOne({});
+        }else{
+            space = Creator.getCollection('spaces').findOne({_id:spaceId});
+        }
+
+        return space;
+    } catch (err) {
+        console.error(err);
+        throw _.extend(new Error("Failed to get space with error: " + err), {
+            response: err
+        });
+    }
+}
+
+// 获取企业内部用户信息
+exports.getUserInfo = function (access_token, code) {
+    var getUserInfoUrl, qyapi, response, _ref, _ref2, _ref3;
+    try {
+        qyapi = (_ref = steedosConfig.qywx) != null ? (_ref2 = _ref.api) != null ? _ref2.getUserInfo : void 0 : void 0;
+        if (!qyapi)
+            return;
+        
+        getUserInfoUrl = qyapi + "?access_token=" + access_token + "&code=" + code;
+        // console.log("getUserInfoUrl: ",getUserInfoUrl);
+        response = HTTP.get(getUserInfoUrl);
+        if (response.error_code) {
+            throw response.msg;
+        }
+        if (response.data.errcode > 0) {
+            throw response.data.errmsg;
+        }
+        return response.data;
+    } catch (err) {
+        console.error(err);
+        throw _.extend(new Error("Failed to complete OAuth handshake with getUserInfoUrl. " + err), {
+            response: err
+        });
+    }
+};

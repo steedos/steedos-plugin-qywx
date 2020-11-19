@@ -11,6 +11,11 @@ fields:
     type: text
     group: 企业微信
     hidden: false
+  qywx_secret:
+    label: 应用密钥(Secret)
+    type: text
+    group: 企业微信
+    hidden: false
   qywx_need_sync:
     label: 同步企业微信
     type: boolean

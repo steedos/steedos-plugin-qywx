@@ -30,8 +30,11 @@ qywx:
     getAllUserList: ${GETALLUSERLIST}
     getAdminList: ${GETADMINLIST}
     getUserInfo3rd: ${GETUSERINFO3RD}
+    getUserInfo: ${GETUSERINFO}
     sendMessage: ${SENDMESSAGE}
+    getToken: ${GETTOKEN}
 tenant:
+  _id: ${ENV_TENANT_ID}
   name: 华炎魔方
   enable_register: true
   enable_forget_password: true
