@@ -12,27 +12,6 @@ public:
 email:
   from: 华炎云 <noreply@steedos.com>
   url: xxx
-qywx:
-  sync_interval: 60000
-  authorize_uri: ${AUTHORIZE_URI}
-  workflow_url: ${ROOT_URL}
-  suite_id: ${SUITE_ID}
-  suite_secret: ${SUITE_SECRET}
-  api:
-    getLoginInfo: ${GETLOGININFO}
-    getProviderToken: ${GETPROVIDERTOKEN}
-    getSuiteAccessToken: ${GETSUITEACCESSTOKEN}
-    getPreAuthCode: ${GETPREAUTHCODE}
-    getPermanentCode: ${GETPERMANENTCODE}
-    getCorpToken: ${GETCORPTOKEN}
-    getDepartmentList: ${GETDEPARTMENTLIST}
-    getUserList: ${GETUSERLIST}
-    getAllUserList: ${GETALLUSERLIST}
-    getAdminList: ${GETADMINLIST}
-    getUserInfo3rd: ${GETUSERINFO3RD}
-    getUserInfo: ${GETUSERINFO}
-    sendMessage: ${SENDMESSAGE}
-    getToken: ${GETTOKEN}
 tenant:
   _id: ${ENV_TENANT_ID}
   name: 华炎魔方
