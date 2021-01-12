@@ -1,7 +1,7 @@
 extend: space_users
 fields:
   qywx_id:
-    label: 企业微信用户账号
+    label: 企业微信账号
     type: text
     hidden: false
   qywx_space:
