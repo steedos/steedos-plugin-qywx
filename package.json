@@ -30,8 +30,7 @@
         "jshashes": "^1.0.8",
         "ts-node": "^8.4.1",
         "bcrypt": "3.0.6",
-        "wechat-crypto": "^0.0.2",
-        "xml2json": "^0.12.0"
+        "wechat-crypto": "^0.0.2"
     },
     "devDependencies": {
         "@steedos/accounts": "1.22.2",
