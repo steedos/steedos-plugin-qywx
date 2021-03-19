@@ -13,14 +13,14 @@ const steedosConfig = objectql.getSteedosConfig();
 let qywx_api = require('./router.js');
 let push = require('./notifications');
 
-let config = ServiceConfiguration.configurations.findOne({
-    service: "qiyeweixin"
-});
+// let config = ServiceConfiguration.configurations.findOne({
+//     service: "qiyeweixin"
+// });
 
-if (config) {
-    newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
-}
-let TICKET_EXPIRES_IN = (config != null ? (_ref4 = config.secret) != null ? _ref4.ticket_expires_in : void 0 : void 0) || 1000 * 60 * 20;
+// if (config) {
+//     newCrypt = new WXBizMsgCrypt(config != null ? (_ref = config.secret) != null ? _ref.token : void 0 : void 0, config != null ? (_ref2 = config.secret) != null ? _ref2.encodingAESKey : void 0 : void 0, config != null ? (_ref3 = config.secret) != null ? _ref3.corpid : void 0 : void 0);
+// }
+// let TICKET_EXPIRES_IN = (config != null ? (_ref4 = config.secret) != null ? _ref4.ticket_expires_in : void 0 : void 0) || 1000 * 60 * 20;
 
 
 router.use("/qywx", async function (req, res, next) {
@@ -283,76 +283,6 @@ router.get("/api/qiyeweixin/sso_steedos", async function (req, res, next) {
         return res.end('');
     }
 });
-
-// 创建套件使用，验证第三方回调协议可用性
-router.get("/api/qiyeweixin/callback", async function (req, res, next) {
-    let result = newCrypt.decrypt(req.query.echostr);
-    console.log("result：",result);
-    res.writeHead(200, {
-        "Content-Type": "text/plain"
-    });
-    return res.end(result.message);
-});
-
-// 第三方回调协议
-// router.post("/api/qiyeweixin/callback", async function (req, res, next) {
-//     let msg_signature, nonce, postData, timestamp;
-//     postData = '';
-//     msg_signature = req.query.msg_signature;
-//     timestamp = req.query.timestamp;
-//     nonce = req.query.nonce;
-//     req.setEncoding('utf8');
-//     req.on("data", function (postDataChunk) {
-//         return postData += postDataChunk;
-//     });
-//     return req.on('end', Meteor.bindEnvironment(function () {
-//         let json, jsonPostData, message, result, _ref5;
-//         jsonPostData = {};
-//         jsonPostData = parser.toJson(postData);
-//         jsonPostData = JSON.parse(jsonPostData);
-//         result = newCrypt.decrypt(jsonPostData.xml.Encrypt);
-//         json = parser.toJson(result.message);
-//         json = JSON.parse(json);
-//         message = json.xml || {};
-//         console.log("message: ", message);
-//         if (!message.InfoType){
-//             if (message.Event == "enter_agent"){
-//                 res.writeHead(200, {
-//                     "Content-Type": "text/plain"
-//                 });
-//                 res.end("success");
-//                 return res.end("success");
-//             }
-//         }else{
-//             switch (message != null ? message.InfoType : void 0) {
-//                 case 'suite_ticket':
-//                     SuiteTicket(message);
-//                     res.writeHead(200, {
-//                         "Content-Type": "text/plain"
-//                     });
-//                     return res.end("success");
-//                 case 'create_auth':
-//                     res.writeHead(200, {
-//                         "Content-Type": "text/plain"
-//                     });
-//                     res.end("success");
-//                     return CreateAuth(message);
-//                 case 'cancel_auth':
-//                     res.writeHead(200, {
-//                         "Content-Type": "text/plain"
-//                     });
-//                     res.end(result != null ? result.message : void 0);
-//                     return CancelAuth(message);
-//                 case 'change_auth':
-//                     return ChangeContact(message.AuthCorpId);
-//                 case 'change_contact':
-//                     return ChangeContact(message.AuthCorpId);
-                
-//             }
-//         }
-        
-//     }));
-// });
 
 // 推送消息
 router.post("/api/qiyeweixin/push", async function (req, res, next) {
