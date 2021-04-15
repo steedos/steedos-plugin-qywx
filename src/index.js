@@ -1,5 +1,5 @@
 const express = require('express');
-const router = require('../src/qywx/api').router;
+const router = require('./qywx/api').router;
 module.exports = {
     init: function () {
         let app = express();

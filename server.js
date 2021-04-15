@@ -2,7 +2,7 @@ require('dotenv-flow').config();
 
 var server = require('@steedos/meteor-bundle-runner');
 var steedos = require('@steedos/core');
-var qywx_sso = require('./lib/index');
+var qywx_sso = require('./src/index');
 
 server.Fiber(function () {
     try {
